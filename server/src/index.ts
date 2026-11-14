@@ -1,0 +1,59 @@
+import cors from 'cors';
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+
+import { env } from './config/env';
+import { connectMongo } from './db/connect';
+import { authRouter } from './routes/auth';
+import { groupsRouter } from './routes/groups';
+import { healthRouter } from './routes/health';
+
+const app = express();
+
+app.use(helmet());
+app.use(
+  cors({
+    origin: env.corsOrigin,
+  }),
+);
+app.use(express.json({ limit: '100kb' }));
+app.use(
+  rateLimit({
+    windowMs: env.rateLimitWindowMs,
+    limit: env.rateLimitMax,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
+
+app.use('/health', healthRouter);
+app.use('/auth', authRouter);
+app.use('/groups', groupsRouter);
+
+app.get('/', (_req, res) => {
+  res.json({
+    name: 'HisabKitab API',
+    scope: 'group-ledgers-only',
+    phase: 5,
+    message: 'Personal expenses are never stored on this server.',
+  });
+});
+
+async function boot(): Promise<void> {
+  if (env.nodeEnv === 'test') return;
+  try {
+    await connectMongo();
+    console.info('MongoDB connected');
+  } catch {
+    console.warn('MongoDB unavailable — auth/group routes will fail until MONGODB_URI is set.');
+  }
+
+  app.listen(env.port, () => {
+    console.info(`HisabKitab API listening on :${env.port}`);
+  });
+}
+
+void boot();
+
+export { app };

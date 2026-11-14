@@ -1,0 +1,13 @@
+/** Current calendar month as YYYY-MM (UTC date parts avoided for local month). */
+export function currentMonthKey(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+export function formatMonthLabel(monthKey: string): string {
+  const [year, month] = monthKey.split('-').map(Number);
+  if (!year || !month) return monthKey;
+  const date = new Date(year, month - 1, 1);
+  return new Intl.DateTimeFormat('en-PK', { month: 'long', year: 'numeric' }).format(date);
+}

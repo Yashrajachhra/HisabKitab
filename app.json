@@ -1,0 +1,107 @@
+{
+  "expo": {
+    "name": "HisabKitab",
+    "slug": "hisabkitab",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "hisabkitab",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hisabkitab.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "HisabKitab uses the camera only to scan receipts on your device. Images are never uploaded.",
+        "NSMicrophoneUsageDescription": "HisabKitab uses the microphone only for on-device voice expense entry. Audio never leaves your phone.",
+        "NSFaceIDUsageDescription": "Unlock HisabKitab with biometrics. Your financial data stays on this device."
+      }
+    },
+    "android": {
+      "package": "com.hisabkitab.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "POST_NOTIFICATIONS"
+      ],
+      "blockedPermissions": [
+        "READ_CONTACTS",
+        "WRITE_CONTACTS",
+        "READ_SMS",
+        "RECEIVE_SMS",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "headers": {
+            "Cross-Origin-Embedder-Policy": "credentialless",
+            "Cross-Origin-Opener-Policy": "same-origin"
+          }
+        }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "enableFTS": false,
+          "useSQLCipher": true
+        }
+      ],
+      "expo-secure-store",
+      "expo-localization",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#001558",
+          "defaultChannel": "budget-alerts",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "HisabKitab uses the camera only to scan receipts on your device. Images are never uploaded.",
+          "photosPermission": "HisabKitab accesses photos only so you can pick a receipt to scan on your device. Images are never uploaded.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "HisabKitab uses the microphone only for on-device voice expense entry. Audio never leaves your phone.",
+          "speechRecognitionPermission": "HisabKitab uses on-device speech recognition to turn phrases like “Spent 200 on lunch” into expenses. Audio is not uploaded.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ],
+      "expo-sharing",
+      "expo-local-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "replace-with-eas-project-id"
+      }
+    }
+  }
+}
