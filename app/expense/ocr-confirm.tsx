@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Switch, Text, View } from 'react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AddCategoryField } from '../../src/components/AddCategoryField';
 import { CategoryGrid } from '../../src/components/CategoryGrid';
 import { Button } from '../../src/components/ui/Button';
 import { Screen } from '../../src/components/ui/Screen';
@@ -47,6 +48,7 @@ export default function OcrConfirmScreen() {
   const clearDraft = useOcrDraftStore((s) => s.clear);
   const categories = useAppStore((s) => s.categories);
   const addExpense = useAppStore((s) => s.addExpense);
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const auto = resolveAutoCategoryId(draft, categories);
 
@@ -142,7 +144,17 @@ export default function OcrConfirmScreen() {
         categories={categories}
         selectedId={selectedCategoryId}
         onSelect={(category) => setValue('categoryId', category.id, { shouldValidate: true })}
+        onAdd={() => setShowAddCategory((v) => !v)}
       />
+      {showAddCategory ? (
+        <AddCategoryField
+          compact
+          onCreated={(category) => {
+            setValue('categoryId', category.id, { shouldValidate: true });
+            setShowAddCategory(false);
+          }}
+        />
+      ) : null}
 
       <View style={styles.spacer} />
 

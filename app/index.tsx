@@ -3,6 +3,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AddCategoryField } from '../src/components/AddCategoryField';
 import { AmountKeypad } from '../src/components/AmountKeypad';
 import { CategoryGrid } from '../src/components/CategoryGrid';
 import { ExpenseList } from '../src/components/ExpenseList';
@@ -35,6 +36,7 @@ export default function HomeScreen() {
 
   const [selected, setSelected] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const monthTotal = useMemo(() => {
     const month = new Date().toISOString().slice(0, 7);
@@ -143,7 +145,18 @@ export default function HomeScreen() {
             clearError();
             setSelected(category);
           }}
+          onAdd={() => setShowAddCategory((v) => !v)}
         />
+        {showAddCategory ? (
+          <AddCategoryField
+            compact
+            onCreated={(category) => {
+              setShowAddCategory(false);
+              clearError();
+              setSelected(category);
+            }}
+          />
+        ) : null}
 
         <Text style={[styles.section, styles.sectionSpaced]}>{t('home.recent')}</Text>
         <ExpenseList expenses={expenses} />

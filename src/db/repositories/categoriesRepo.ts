@@ -1,5 +1,17 @@
+import { createId } from '../../utils/id';
 import { getDatabase } from '../client';
 import type { Category } from '../types';
+
+const CATEGORY_COLORS = [
+  '#0F766E',
+  '#1D4ED8',
+  '#C2410C',
+  '#7C3AED',
+  '#0369A1',
+  '#B45309',
+  '#BE123C',
+  '#4338CA',
+] as const;
 
 type CategoryRow = {
   id: string;
@@ -50,4 +62,47 @@ export async function getCategoryById(id: string): Promise<Category | null> {
     id,
   );
   return row ? mapCategory(row) : null;
+}
+
+export type CreateCategoryInput = {
+  name: string;
+  isQuickTap?: boolean;
+  icon?: string;
+  color?: string;
+};
+
+export async function createCategory(input: CreateCategoryInput): Promise<Category> {
+  const db = await getDatabase();
+  const name = input.name.trim();
+  if (name.length < 1 || name.length > 40) {
+    throw new Error('Category name must be 1–40 characters');
+  }
+
+  // Uniqueness / sort order in JS so web memory DB (no LOWER/MAX) works too.
+  const existing = await listCategories();
+  if (existing.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+    throw new Error('A category with that name already exists');
+  }
+
+  const sortOrder =
+    existing.reduce((max, c) => (c.sortOrder > max ? c.sortOrder : max), -1) + 1;
+  const id = createId();
+  const color = input.color ?? CATEGORY_COLORS[sortOrder % CATEGORY_COLORS.length];
+  const icon = input.icon ?? 'dots';
+  const isQuickTap = input.isQuickTap !== false ? 1 : 0;
+
+  await db.runAsync(
+    `INSERT INTO categories (id, name, icon, color, is_quick_tap, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    id,
+    name,
+    icon,
+    color,
+    isQuickTap,
+    sortOrder,
+  );
+
+  const created = await getCategoryById(id);
+  if (!created) throw new Error('Failed to create category');
+  return created;
 }

@@ -15,6 +15,8 @@ type AppState = {
   error: string | null;
   hydrate: () => Promise<void>;
   refreshExpenses: () => Promise<void>;
+  refreshCategories: () => Promise<void>;
+  addCategory: (input: { name: string; isQuickTap?: boolean }) => Promise<Category>;
   addExpense: (input: CreateExpenseInput) => Promise<void>;
   removeExpense: (id: string) => Promise<void>;
   clearError: () => void;
@@ -75,6 +77,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     } catch {
       set({ error: 'Could not refresh expenses.' });
     }
+  },
+
+  refreshCategories: async () => {
+    const [categories, quickTapCategories] = await Promise.all([
+      categoriesRepo.listCategories(),
+      categoriesRepo.listQuickTapCategories(),
+    ]);
+    set({ categories, quickTapCategories });
+  },
+
+  addCategory: async (input) => {
+    const created = await categoriesRepo.createCategory(input);
+    await get().refreshCategories();
+    return created;
   },
 
   addExpense: async (input) => {

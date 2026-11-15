@@ -3,6 +3,7 @@ import { Alert, Pressable, Switch, Text, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AddCategoryField } from '../../src/components/AddCategoryField';
 import { Button } from '../../src/components/ui/Button';
 import { ThemeToggle } from '../../src/components/ui/HeaderToggles';
 import { Screen } from '../../src/components/ui/Screen';
@@ -24,6 +25,7 @@ export default function SettingsScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const hydrate = useAppStore((s) => s.hydrate);
+  const categories = useAppStore((s) => s.categories);
 
   const [lockEnabled, setLockEnabled] = useState(false);
   const [pin, setPin] = useState('');
@@ -164,6 +166,21 @@ export default function SettingsScreen() {
         <ThemeToggle />
       </View>
 
+      <Text style={styles.section}>{t('settings.categories')}</Text>
+      <View style={styles.categoryList}>
+        {categories.map((category) => (
+          <View key={category.id} style={styles.categoryChip}>
+            <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
+            <Text style={styles.categoryName}>{category.name}</Text>
+          </View>
+        ))}
+      </View>
+      <AddCategoryField
+        onCreated={() => {
+          setMessage(t('settings.categoryAdded'));
+        }}
+      />
+
       <Text style={styles.section}>{t('settings.account')}</Text>
       {user ? (
         <>
@@ -249,6 +266,33 @@ const useStyles = makeStyles((colors) => ({
     marginTop: 2,
   },
   message: { ...typography.caption, color: colors.success, marginTop: spacing.md },
+  categoryList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  categoryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  categoryName: {
+    ...typography.caption,
+    color: colors.text,
+    fontWeight: '600',
+  },
   back: { marginTop: spacing.xl, padding: spacing.sm },
   backText: { color: colors.primary, fontWeight: '700', textAlign: 'center' },
 }));

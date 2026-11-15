@@ -21,7 +21,11 @@ const DEFAULT_CATEGORIES: SeedCategory[] = [
   { name: 'Hostel', icon: 'home', color: '#0F766E', isQuickTap: true, sortOrder: 4 },
   { name: 'Mobile Load', icon: 'phone', color: '#7C3AED', isQuickTap: true, sortOrder: 5 },
   { name: 'Stationery', icon: 'pen', color: '#0369A1', isQuickTap: false, sortOrder: 6 },
-  { name: 'Other', icon: 'dots', color: '#64748B', isQuickTap: true, sortOrder: 7 },
+  { name: 'Entertainment', icon: 'dots', color: '#BE123C', isQuickTap: true, sortOrder: 7 },
+  { name: 'Health', icon: 'dots', color: '#059669', isQuickTap: false, sortOrder: 8 },
+  { name: 'Laundry', icon: 'dots', color: '#0891B2', isQuickTap: false, sortOrder: 9 },
+  { name: 'Books', icon: 'pen', color: '#B45309', isQuickTap: false, sortOrder: 10 },
+  { name: 'Other', icon: 'dots', color: '#64748B', isQuickTap: true, sortOrder: 11 },
 ];
 
 export async function seedDefaultCategories(db: SeedDatabase): Promise<void> {

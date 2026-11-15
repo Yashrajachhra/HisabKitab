@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Pressable, Text, View } from 'react-native';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
+import { AddCategoryField } from '../../src/components/AddCategoryField';
 import { CategoryGrid } from '../../src/components/CategoryGrid';
 import { Button } from '../../src/components/ui/Button';
 import { Screen } from '../../src/components/ui/Screen';
@@ -24,6 +26,7 @@ export default function ManualExpenseScreen() {
   const router = useRouter();
   const categories = useAppStore((s) => s.categories);
   const addExpense = useAppStore((s) => s.addExpense);
+  const [showAddCategory, setShowAddCategory] = useState(false);
 
   const {
     control,
@@ -91,7 +94,17 @@ export default function ManualExpenseScreen() {
         categories={categories}
         selectedId={selectedCategoryId}
         onSelect={(category) => setValue('categoryId', category.id, { shouldValidate: true })}
+        onAdd={() => setShowAddCategory((v) => !v)}
       />
+      {showAddCategory ? (
+        <AddCategoryField
+          compact
+          onCreated={(category) => {
+            setValue('categoryId', category.id, { shouldValidate: true });
+            setShowAddCategory(false);
+          }}
+        />
+      ) : null}
 
       <View style={styles.spacer} />
 
