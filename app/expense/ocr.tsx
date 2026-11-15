@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
-import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +11,7 @@ import { makeStyles, useTheme } from '../../src/theme/ThemeProvider';
 import {
   OcrLimitError,
   OcrNativeUnavailableError,
-  getOcrUsageStatus,
   scanReceiptImage,
-  type OcrUsageStatus,
 } from '../../src/services/ocr';
 import { ensureMediaPermission } from '../../src/services/ocr/permissions';
 import { useOcrDraftStore } from '../../src/store/ocrDraftStore';
@@ -30,15 +28,8 @@ export default function OcrCaptureScreen() {
   const router = useRouter();
   const setFromScan = useOcrDraftStore((s) => s.setFromScan);
   const [busy, setBusy] = useState(false);
-  const [usage, setUsage] = useState<OcrUsageStatus | null>(null);
   const [error, setError] = useState<UiError | null>(null);
   const [cameraDeniedHint, setCameraDeniedHint] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      void getOcrUsageStatus().then(setUsage);
-    }, []),
-  );
 
   const processUri = async (uri: string) => {
     setBusy(true);
@@ -66,7 +57,6 @@ export default function OcrCaptureScreen() {
       }
     } finally {
       setBusy(false);
-      void getOcrUsageStatus().then(setUsage);
     }
   };
 
@@ -115,14 +105,6 @@ export default function OcrCaptureScreen() {
     <Screen title={t('ocr.title')}>
       <Text style={styles.privacy}>{t('ocr.privacy')}</Text>
 
-      {usage ? (
-        <Text style={styles.usage}>
-          {usage.unlimited
-            ? t('ocr.usageUnlimited')
-            : t('ocr.usageLimited', { used: usage.used, limit: usage.limit })}
-        </Text>
-      ) : null}
-
       {error ? (
         <View style={styles.errorBox} accessibilityRole="alert">
           <Text style={styles.errorTitle}>{error.title}</Text>
@@ -163,12 +145,6 @@ const useStyles = makeStyles((colors) => ({
     color: colors.textSecondary,
     marginBottom: spacing.md,
     lineHeight: 22,
-  },
-  usage: {
-    ...typography.caption,
-    color: colors.primary,
-    marginBottom: spacing.md,
-    fontWeight: '600',
   },
   actions: {
     marginTop: spacing.md,
