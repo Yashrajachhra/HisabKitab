@@ -7,40 +7,33 @@ import {
 export type LaunchPhase = 'ALL_FREE' | 'FREEMIUM';
 
 /**
- * Remote-overridable launch phase (flip via EXPO_PUBLIC_LAUNCH_PHASE without a new release).
+ * Product decision: every previously “Plus” feature is free for everyone.
+ * FREEMIUM env is ignored so limits never surprise users during launch.
  */
 export function getLaunchPhase(): LaunchPhase {
-  const fromEnv = process.env.EXPO_PUBLIC_LAUNCH_PHASE;
-  if (fromEnv === 'FREEMIUM' || fromEnv === 'ALL_FREE') {
-    return fromEnv;
-  }
+  void process.env.EXPO_PUBLIC_LAUNCH_PHASE;
   return DEFAULT_LAUNCH_PHASE;
 }
 
-/**
- * While launch phase is ALL_FREE, every Plus feature is unlocked (no payments).
- * Flip EXPO_PUBLIC_LAUNCH_PHASE=FREEMIUM later to enforce free limits.
- */
+/** Always unlocked — PDF, unlimited OCR, unlimited groups, tag analytics. */
 export function isPlusUnlocked(): boolean {
-  if (getLaunchPhase() === 'ALL_FREE') return true;
-  return process.env.EXPO_PUBLIC_FORCE_PLUS === '1';
+  return true;
 }
 
 export function getFreeGroupLimit(): number {
   return FREE_ACTIVE_GROUP_LIMIT;
 }
 
-export async function canCreateGroup(currentActiveCount: number): Promise<boolean> {
-  if (isPlusUnlocked()) return true;
-  return currentActiveCount < getFreeGroupLimit();
+export async function canCreateGroup(_currentActiveCount: number): Promise<boolean> {
+  return true;
 }
 
 export function canExportPdf(): boolean {
-  return isPlusUnlocked();
+  return true;
 }
 
 export function canUseCustomTagAnalytics(): boolean {
-  return isPlusUnlocked();
+  return true;
 }
 
 export function getOcrLimitForSummary(): number {
@@ -59,13 +52,11 @@ export function getFreemiumSummary(): {
   ocrLimit: number | 'unlimited';
   groupLimit: number | 'unlimited';
 } {
-  const plus = isPlusUnlocked();
-  const phase = getLaunchPhase();
   return {
-    phase,
-    plus,
-    allFree: phase === 'ALL_FREE',
-    ocrLimit: plus ? 'unlimited' : getOcrLimitForSummary(),
-    groupLimit: plus ? 'unlimited' : getFreeGroupLimit(),
+    phase: 'ALL_FREE',
+    plus: true,
+    allFree: true,
+    ocrLimit: 'unlimited',
+    groupLimit: 'unlimited',
   };
 }

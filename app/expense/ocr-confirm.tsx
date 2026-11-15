@@ -12,10 +12,31 @@ import { TextField } from '../../src/components/ui/TextField';
 import { PAYMENT_METHODS } from '../../src/config/constants';
 import { radii, spacing, typography } from '../../src/config/theme';
 import { makeStyles } from '../../src/theme/ThemeProvider';
+import { inferCategoryFromReceipt } from '../../src/features/ocr/categorizeReceipt';
 import { ocrConfirmSchema, type OcrConfirmFormValues } from '../../src/features/ocr/schemas';
 import { useAppStore } from '../../src/store/appStore';
 import { defaultPaymentMethod, useOcrDraftStore } from '../../src/store/ocrDraftStore';
 import { parseAmountInput, toMajorUnits } from '../../src/utils/money';
+
+function resolveAutoCategoryId(
+  draft: { merchant: string | null; textForCategory: string } | null | undefined,
+  categories: Array<{ id: string; name: string }>,
+): { categoryId: string; autoName: string | null } {
+  const fallbackId = categories[0]?.id ?? '';
+  if (!draft || categories.length === 0) {
+    return { categoryId: fallbackId, autoName: null };
+  }
+  const hint = inferCategoryFromReceipt(
+    draft.textForCategory,
+    draft.merchant,
+    categories.map((c) => c.name),
+  );
+  if (!hint) return { categoryId: fallbackId, autoName: null };
+  const match = categories.find((c) => c.name.toLowerCase() === hint.toLowerCase());
+  return match
+    ? { categoryId: match.id, autoName: match.name }
+    : { categoryId: fallbackId, autoName: null };
+}
 
 export default function OcrConfirmScreen() {
   const styles = useStyles();
@@ -27,6 +48,8 @@ export default function OcrConfirmScreen() {
   const categories = useAppStore((s) => s.categories);
   const addExpense = useAppStore((s) => s.addExpense);
 
+  const auto = resolveAutoCategoryId(draft, categories);
+
   const {
     control,
     handleSubmit,
@@ -37,7 +60,7 @@ export default function OcrConfirmScreen() {
     resolver: zodResolver(ocrConfirmSchema),
     defaultValues: {
       amountMajor: draft?.amountMinor ? String(toMajorUnits(draft.amountMinor)) : '',
-      categoryId: categories[0]?.id ?? '',
+      categoryId: auto.categoryId,
       note: draft?.merchant ?? '',
       date: draft?.date ?? new Date().toISOString().slice(0, 10),
       paymentMethod: defaultPaymentMethod(draft?.paymentMethodHint ?? null),
@@ -48,8 +71,13 @@ export default function OcrConfirmScreen() {
   useEffect(() => {
     if (!draft) {
       router.replace('/expense/ocr' as Href);
+      return;
     }
-  }, [draft, router]);
+    // Re-apply auto category if categories hydrate after draft.
+    if (auto.categoryId) {
+      setValue('categoryId', auto.categoryId, { shouldValidate: true });
+    }
+  }, [draft, router, auto.categoryId, setValue]);
 
   const selectedCategoryId = watch('categoryId');
   const selectedPayment = watch('paymentMethod');
@@ -87,6 +115,9 @@ export default function OcrConfirmScreen() {
       <View style={styles.badgeRow}>
         <Text style={styles.badge}>{t(`ocr.format.${draft.format}`)}</Text>
         <Text style={styles.badge}>{t(`ocr.confidence.${draft.confidence}`)}</Text>
+        {auto.autoName ? (
+          <Text style={styles.badge}>{t('ocr.autoCategory', { category: auto.autoName })}</Text>
+        ) : null}
       </View>
       <Text style={styles.hint}>{t('ocr.confirmHint')}</Text>
 

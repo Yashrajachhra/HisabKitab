@@ -37,6 +37,7 @@ export default function ManualExpenseScreen() {
       amountMajor: '',
       categoryId: categories[0]?.id ?? '',
       note: '',
+      tags: '',
       date: new Date().toISOString().slice(0, 10),
       paymentMethod: 'cash',
     },
@@ -49,6 +50,11 @@ export default function ManualExpenseScreen() {
     const amountMinor = parseAmountInput(values.amountMajor);
     if (amountMinor === null || amountMinor <= 0) return;
 
+    const tags = (values.tags ?? '')
+      .split(/[,#]+/)
+      .map((tag) => tag.trim().replace(/^#/, ''))
+      .filter(Boolean);
+
     await addExpense({
       amountMinor,
       categoryId: values.categoryId,
@@ -56,6 +62,7 @@ export default function ManualExpenseScreen() {
       date: values.date,
       source: 'manual',
       paymentMethod: values.paymentMethod,
+      tags,
     });
     router.back();
   });
@@ -99,6 +106,21 @@ export default function ManualExpenseScreen() {
             onBlur={onBlur}
             placeholder={t('manual.notePlaceholder')}
             error={errors.note?.message}
+          />
+        )}
+      />
+
+      <Controller
+        control={control}
+        name="tags"
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextField
+            label={t('manual.tags')}
+            value={value ?? ''}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            placeholder={t('manual.tagsPlaceholder')}
+            error={errors.tags?.message}
           />
         )}
       />

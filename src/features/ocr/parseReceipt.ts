@@ -10,6 +10,8 @@ export type ParsedReceipt = {
   paymentMethodHint: PaymentMethod | null;
   format: ReceiptFormat;
   confidence: 'high' | 'medium' | 'low';
+  /** Lowercased OCR blob used later to auto-pick a category. */
+  textForCategory: string;
 };
 
 type AmountCandidate = {
@@ -244,12 +246,16 @@ export function parseReceiptText(rawText: string): ParsedReceipt {
   const candidates = extractAmounts(lines, format);
   const amountMinor = candidates[0]?.amountMinor ?? null;
 
+  const merchant = extractMerchant(lines, format, text);
+
   return {
     amountMinor,
-    merchant: extractMerchant(lines, format, text),
+    merchant,
     date: extractDate(text),
     paymentMethodHint: paymentHint(format),
     format,
     confidence: confidenceFrom(candidates, amountMinor),
+    // Keep enough text for category inference; never log this in UI.
+    textForCategory: text.slice(0, 4000),
   };
 }

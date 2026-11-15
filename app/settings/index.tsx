@@ -12,9 +12,11 @@ import { makeStyles } from '../../src/theme/ThemeProvider';
 import { deleteAllLocalData } from '../../src/db/repositories/dataLifecycle';
 import { listRecentExpenses } from '../../src/db/repositories/expensesRepo';
 import { isAppLockEnabled, setAppLockEnabled, setAppPin } from '../../src/services/appLock';
+import { getFreemiumSummary } from '../../src/config/featureFlags';
 import { exportExpensesCsv, exportExpensesPdf } from '../../src/services/export';
 import { useAuthStore } from '../../src/store/authStore';
 import { useAppStore } from '../../src/store/appStore';
+
 export default function SettingsScreen() {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -116,8 +118,19 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const plan = getFreemiumSummary();
+
   return (
     <Screen title={t('settings.title')} scroll>
+      <View style={styles.planCard}>
+        <Text style={styles.planTitle}>{t('settings.plan')}</Text>
+        <Text style={styles.planBody}>{t('settings.allFreeBanner')}</Text>
+        <Text style={styles.planMeta}>{t('settings.limitsUnlimited')}</Text>
+        <Text style={styles.planMeta}>
+          {t('settings.phase')}: {plan.phase}
+        </Text>
+      </View>
+
       <Text style={[styles.section, styles.firstSection]}>{t('settings.export')}</Text>
       <Button label={t('settings.exportCsv')} loading={busy} onPress={() => void onExportCsv()} />
       <Button
@@ -187,6 +200,17 @@ export default function SettingsScreen() {
 }
 
 const useStyles = makeStyles((colors) => ({
+  planCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  planTitle: { ...typography.subtitle, color: colors.text, marginBottom: spacing.xs },
+  planBody: { ...typography.body, color: colors.success, fontWeight: '600' },
+  planMeta: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs },
   meta: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.xs },
   section: {
     ...typography.subtitle,

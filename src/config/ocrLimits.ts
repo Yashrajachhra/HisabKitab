@@ -1,5 +1,4 @@
 import { DEFAULT_OCR_FREE_MONTHLY_LIMIT } from './constants';
-import { isPlusUnlocked } from './featureFlags';
 
 export function getOcrMonthlyLimit(): number {
   const fromEnv = process.env.EXPO_PUBLIC_OCR_FREE_MONTHLY_LIMIT;
@@ -10,6 +9,7 @@ export function getOcrMonthlyLimit(): number {
   return DEFAULT_OCR_FREE_MONTHLY_LIMIT;
 }
 
+/** OCR scans are free / unlimited for all users. */
 export function isOcrUnlimited(): boolean {
-  return isPlusUnlocked();
+  return true;
 }

@@ -183,3 +183,37 @@ export async function sumByCategoryForMonth(month: string): Promise<CategorySpen
     amountMinor: row.total,
   }));
 }
+
+export type TagSpend = {
+  tag: string;
+  amountMinor: number;
+};
+
+/** Aggregate spend by custom tags for the month (formerly Plus-only). */
+export async function sumByTagForMonth(month: string): Promise<TagSpend[]> {
+  const db = await getDatabase();
+  const rows = await db.getAllAsync<{ amount_minor: number; tags: string }>(
+    `SELECT amount_minor, tags FROM expenses WHERE substr(date, 1, 7) = ?`,
+    month,
+  );
+
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    let tags: string[] = [];
+    try {
+      const parsed: unknown = JSON.parse(row.tags);
+      if (Array.isArray(parsed) && parsed.every((t) => typeof t === 'string')) {
+        tags = parsed.map((t) => t.trim()).filter(Boolean);
+      }
+    } catch {
+      tags = [];
+    }
+    for (const tag of tags) {
+      totals.set(tag, (totals.get(tag) ?? 0) + row.amount_minor);
+    }
+  }
+
+  return [...totals.entries()]
+    .map(([tag, amountMinor]) => ({ tag, amountMinor }))
+    .sort((a, b) => b.amountMinor - a.amountMinor);
+}

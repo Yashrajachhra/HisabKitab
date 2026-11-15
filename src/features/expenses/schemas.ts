@@ -12,6 +12,7 @@ export const manualExpenseSchema = z.object({
     }, 'Enter a valid amount greater than 0'),
   categoryId: z.string().min(1, 'Pick a category'),
   note: z.string().max(280),
+  tags: z.string().max(200).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD'),
   paymentMethod: z.enum(PAYMENT_METHODS),
 });

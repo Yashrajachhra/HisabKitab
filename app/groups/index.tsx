@@ -9,7 +9,6 @@ import { Screen } from '../../src/components/ui/Screen';
 import { TextField } from '../../src/components/ui/TextField';
 import { radii, spacing, typography } from '../../src/config/theme';
 import { makeStyles, useTheme } from '../../src/theme/ThemeProvider';
-import { canCreateGroup } from '../../src/config/featureFlags';
 import * as groupsRepo from '../../src/db/repositories/groupsRepo';
 import { useAuthStore } from '../../src/store/authStore';
 import {
@@ -111,11 +110,6 @@ export default function GroupsScreen() {
     setBusy(true);
     setError(null);
     try {
-      const allowed = await canCreateGroup(await groupsRepo.countActiveGroups());
-      if (!allowed) {
-        setError(t('groups.limitReached'));
-        return;
-      }
       await createRemoteGroup(name.trim());
       setName('');
       setShowCreate(false);

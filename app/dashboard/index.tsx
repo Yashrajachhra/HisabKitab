@@ -14,9 +14,10 @@ import { TextField } from '../../src/components/ui/TextField';
 import { radii, spacing, typography } from '../../src/config/theme';
 import { makeStyles } from '../../src/theme/ThemeProvider';
 import { budgetFormSchema, type BudgetFormValues } from '../../src/features/budgets/schemas';
+import * as expensesRepo from '../../src/db/repositories/expensesRepo';
 import { useBudgetStore } from '../../src/store/budgetStore';
-import { formatMonthLabel } from '../../src/utils/date';
-import { parseAmountInput, toMajorUnits } from '../../src/utils/money';
+import { currentMonthKey, formatMonthLabel } from '../../src/utils/date';
+import { formatPkr, parseAmountInput, toMajorUnits } from '../../src/utils/money';
 
 export default function DashboardScreen() {
   const styles = useStyles();
@@ -25,6 +26,7 @@ export default function DashboardScreen() {
   const [editing, setEditing] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categoryLimitMajor, setCategoryLimitMajor] = useState('');
+  const [tagSpend, setTagSpend] = useState<expensesRepo.TagSpend[]>([]);
 
   const month = useBudgetStore((s) => s.month);
   const budget = useBudgetStore((s) => s.budget);
@@ -42,6 +44,7 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadMonth();
+      void expensesRepo.sumByTagForMonth(currentMonthKey()).then(setTagSpend).catch(() => setTagSpend([]));
     }, [loadMonth]),
   );
 
@@ -156,6 +159,20 @@ export default function DashboardScreen() {
         <CategorySpendChart data={categorySpend} />
       </View>
 
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>{t('dashboard.tagAnalytics')}</Text>
+        {tagSpend.length === 0 ? (
+          <Text style={styles.hint}>{t('dashboard.tagAnalyticsEmpty')}</Text>
+        ) : (
+          tagSpend.map((item) => (
+            <View key={item.tag} style={styles.tagRow}>
+              <Text style={styles.tagName}>#{item.tag}</Text>
+              <Text style={styles.tagAmount}>{formatPkr(item.amountMinor)}</Text>
+            </View>
+          ))
+        )}
+      </View>
+
       <Text style={styles.section}>{t('dashboard.categoryLimits')}</Text>
       <CategoryBudgetList
         categorySpend={categorySpend}
@@ -239,6 +256,23 @@ const useStyles = makeStyles((colors) => ({
   cardTitle: {
     ...typography.subtitle,
     color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+  },
+  tagName: {
+    ...typography.body,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  tagAmount: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
   },
   edit: {
     color: colors.primary,
