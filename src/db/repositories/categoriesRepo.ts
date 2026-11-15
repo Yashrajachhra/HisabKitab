@@ -88,7 +88,8 @@ export async function createCategory(input: CreateCategoryInput): Promise<Catego
     existing.reduce((max, c) => (c.sortOrder > max ? c.sortOrder : max), -1) + 1;
   const id = createId();
   const color = input.color ?? CATEGORY_COLORS[sortOrder % CATEGORY_COLORS.length];
-  const icon = input.icon ?? 'dots';
+  const initial = name.trim().charAt(0).toLowerCase();
+  const icon = input.icon ?? (initial || 'dots');
   const isQuickTap = input.isQuickTap !== false ? 1 : 0;
 
   await db.runAsync(

@@ -24,8 +24,15 @@ const ICON_GLYPH: Record<string, string> = {
   home: 'H',
   phone: 'M',
   pen: 'S',
-  dots: '…',
 };
+
+function categoryGlyph(category: Category): string {
+  const mapped = ICON_GLYPH[category.icon];
+  if (mapped) return mapped;
+  // Custom / “dots” / single-letter icons → first letter of the name
+  const initial = category.name.trim().charAt(0).toUpperCase();
+  return initial || '•';
+}
 
 export function CategoryGrid({ categories, onSelect, selectedId, onAdd }: CategoryGridProps) {
   const { colors } = useTheme();
@@ -56,7 +63,7 @@ export function CategoryGrid({ categories, onSelect, selectedId, onAdd }: Catego
           >
             <View style={[styles.iconWrap, { backgroundColor: `${category.color}22` }]}>
               <Text style={[styles.icon, { color: category.color }]}>
-                {ICON_GLYPH[category.icon] ?? '•'}
+                {categoryGlyph(category)}
               </Text>
             </View>
             <Text style={styles.name} numberOfLines={1}>
