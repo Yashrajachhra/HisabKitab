@@ -8,6 +8,7 @@ import { AmountKeypad } from '../src/components/AmountKeypad';
 import { CategoryGrid } from '../src/components/CategoryGrid';
 import { ExpenseList } from '../src/components/ExpenseList';
 import { HkLogo } from '../src/components/HkLogo';
+import { SettingsButton } from '../src/components/ui/HeaderToggles';
 import { Screen } from '../src/components/ui/Screen';
 import { radii, spacing, typography } from '../src/config/theme';
 import { makeStyles } from '../src/theme/ThemeProvider';
@@ -79,14 +80,10 @@ export default function HomeScreen() {
             >
               <Text style={styles.link}>{t('home.groups')}</Text>
             </Pressable>
-            <Pressable
-              accessibilityRole="button"
+            <SettingsButton
               accessibilityLabel={t('settings.title')}
               onPress={() => router.push('/settings')}
-              style={styles.linkBtn}
-            >
-              <Text style={styles.link}>⚙</Text>
-            </Pressable>
+            />
           </View>
         }
       >
