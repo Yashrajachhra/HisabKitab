@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Platform, Text, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../src/components/ui/Button';
 import { Screen } from '../../src/components/ui/Screen';
+import { TextField } from '../../src/components/ui/TextField';
 import { radii, spacing, typography } from '../../src/config/theme';
 import { makeStyles } from '../../src/theme/ThemeProvider';
 import { parseVoiceExpense } from '../../src/features/voice/parseVoiceExpense';
@@ -18,6 +19,17 @@ import { useVoiceDraftStore } from '../../src/store/voiceDraftStore';
 
 type UiError = { title: string; body: string };
 
+function probeOnDeviceSpeech(): boolean {
+  try {
+    return (
+      ExpoSpeechRecognitionModule.isRecognitionAvailable() &&
+      ExpoSpeechRecognitionModule.supportsOnDeviceRecognition()
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function VoiceCaptureScreen() {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -26,7 +38,19 @@ export default function VoiceCaptureScreen() {
 
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [speechReady, setSpeechReady] = useState(false);
   const [error, setError] = useState<UiError | null>(null);
+
+  useEffect(() => {
+    const ready = Platform.OS !== 'web' && probeOnDeviceSpeech();
+    setSpeechReady(ready);
+    if (!ready) {
+      setError({
+        title: t('voice.onDeviceTitle'),
+        body: t('voice.onDeviceBody'),
+      });
+    }
+  }, [t]);
 
   useSpeechRecognitionEvent('start', () => setListening(true));
   useSpeechRecognitionEvent('end', () => setListening(false));
@@ -45,6 +69,7 @@ export default function VoiceCaptureScreen() {
       return;
     }
     if (event.error === 'service-not-allowed' || event.error === 'language-not-supported') {
+      setSpeechReady(false);
       setError({
         title: t('voice.onDeviceTitle'),
         body: t('voice.onDeviceBody'),
@@ -103,6 +128,7 @@ export default function VoiceCaptureScreen() {
       }
     } catch (err) {
       setListening(false);
+      setSpeechReady(false);
       if (err instanceof VoiceOnDeviceUnavailableError) {
         setError({ title: t('voice.onDeviceTitle'), body: t('voice.onDeviceBody') });
         return;
@@ -144,10 +170,20 @@ export default function VoiceCaptureScreen() {
         </Text>
       </View>
 
-      {!listening ? (
-        <Button label={t('voice.start')} onPress={() => void startListening()} />
+      {speechReady ? (
+        !listening ? (
+          <Button label={t('voice.start')} onPress={() => void startListening()} />
+        ) : (
+          <Button label={t('voice.stop')} variant="secondary" onPress={stopListening} />
+        )
       ) : (
-        <Button label={t('voice.stop')} variant="secondary" onPress={stopListening} />
+        <TextField
+          label={t('voice.typeFallbackLabel')}
+          value={transcript}
+          onChangeText={setTranscript}
+          placeholder={t('voice.typeFallbackPlaceholder')}
+          autoCapitalize="sentences"
+        />
       )}
 
       <Button

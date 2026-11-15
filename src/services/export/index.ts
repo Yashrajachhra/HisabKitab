@@ -4,7 +4,6 @@ import * as Sharing from 'expo-sharing';
 
 import type { ExpenseWithCategory } from '../../db/types';
 import { formatPkr, toMajorUnits } from '../../utils/money';
-import { canExportPdf } from '../../config/featureFlags';
 
 function csvEscape(value: string): string {
   if (value.includes(',') || value.includes('"') || value.includes('\n')) {
@@ -53,31 +52,44 @@ export function buildExpensesPdfHtml(expenses: ExpenseWithCategory[], title: str
   </body></html>`;
 }
 
+function downloadBlobWeb(filename: string, contents: string, mimeType: string): void {
+  const blob = new Blob([contents], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function shareNativeFile(uri: string, mimeType: string, dialogTitle: string): Promise<void> {
+  if (!(await Sharing.isAvailableAsync())) {
+    throw new Error('Sharing is not available on this device.');
+  }
+  await Sharing.shareAsync(uri, { mimeType, dialogTitle });
+}
+
 export async function shareTextFile(
   filename: string,
   contents: string,
   mimeType: string,
 ): Promise<void> {
-  const base = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
-  if (!base) throw new Error('No file directory available');
-  const uri = `${base}${filename}`;
-  await FileSystem.writeAsStringAsync(uri, contents, { encoding: FileSystem.EncodingType.UTF8 });
-
+  // Web has no sandboxed FS directory — download directly.
   if (Platform.OS === 'web') {
-    // Browser download fallback
-    const blob = new Blob([contents], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlobWeb(filename, contents, mimeType);
     return;
   }
 
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(uri, { mimeType, dialogTitle: filename });
-  }
+  const base = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
+  if (!base) throw new Error('No file directory available');
+  const uri = `${base}${filename}`;
+  await FileSystem.writeAsStringAsync(uri, contents, {
+    encoding: FileSystem.EncodingType.UTF8,
+  });
+  await shareNativeFile(uri, mimeType, filename);
 }
 
 export async function exportExpensesCsv(expenses: ExpenseWithCategory[]): Promise<void> {
@@ -86,17 +98,16 @@ export async function exportExpensesCsv(expenses: ExpenseWithCategory[]): Promis
 }
 
 export async function exportExpensesPdf(expenses: ExpenseWithCategory[]): Promise<void> {
-  if (!canExportPdf()) {
-    throw new Error('PDF export requires HisabKitab Plus');
-  }
-  // Lazy import so web/tests without native print still load the module graph.
+  // Launch phase keeps exports free (ALL_FREE). No Plus gate.
   const Print = await import('expo-print');
   const html = buildExpensesPdfHtml(expenses, 'HisabKitab Export');
-  const file = await Print.printToFileAsync({ html });
-  if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(file.uri, {
-      mimeType: 'application/pdf',
-      dialogTitle: 'HisabKitab PDF',
-    });
+
+  if (Platform.OS === 'web') {
+    // Browser print dialog → user can "Save as PDF".
+    await Print.printAsync({ html });
+    return;
   }
+
+  const file = await Print.printToFileAsync({ html });
+  await shareNativeFile(file.uri, 'application/pdf', 'HisabKitab PDF');
 }

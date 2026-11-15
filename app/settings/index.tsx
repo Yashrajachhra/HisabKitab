@@ -4,10 +4,11 @@ import { useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../src/components/ui/Button';
+import { ThemeToggle } from '../../src/components/ui/HeaderToggles';
 import { Screen } from '../../src/components/ui/Screen';
 import { TextField } from '../../src/components/ui/TextField';
-import { spacing, typography } from '../../src/config/theme';
-import { makeStyles, useTheme } from '../../src/theme/ThemeProvider';
+import { radii, spacing, typography } from '../../src/config/theme';
+import { makeStyles } from '../../src/theme/ThemeProvider';
 import { deleteAllLocalData } from '../../src/db/repositories/dataLifecycle';
 import { listRecentExpenses } from '../../src/db/repositories/expensesRepo';
 import { isAppLockEnabled, setAppLockEnabled, setAppPin } from '../../src/services/appLock';
@@ -18,8 +19,6 @@ export default function SettingsScreen() {
   const styles = useStyles();
   const { t } = useTranslation();
   const router = useRouter();
-  const { scheme, setScheme } = useTheme();
-  const darkMode = scheme === 'dark';
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const hydrate = useAppStore((s) => s.hydrate);
@@ -84,11 +83,6 @@ export default function SettingsScreen() {
     setMessage(t('settings.lockNeedPin'));
   };
 
-  const onToggleDark = (value: boolean) => {
-    setScheme(value ? 'dark' : 'light');
-    setMessage(t('settings.themeSaved'));
-  };
-
   const onDeleteData = () => {
     Alert.alert(t('settings.deleteDataTitle'), t('settings.deleteDataBody'), [
       { text: t('common.back'), style: 'cancel' },
@@ -149,9 +143,12 @@ export default function SettingsScreen() {
       <Button label={t('settings.savePin')} onPress={() => void onSavePin()} />
 
       <Text style={styles.section}>{t('settings.appearance')}</Text>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>{t('settings.darkMode')}</Text>
-        <Switch value={darkMode} onValueChange={onToggleDark} />
+      <View style={styles.themeRow}>
+        <View style={styles.themeCopy}>
+          <Text style={styles.rowLabel}>{t('settings.darkMode')}</Text>
+          <Text style={styles.themeHint}>{t('settings.themeHint')}</Text>
+        </View>
+        <ThemeToggle />
       </View>
 
       <Text style={styles.section}>{t('settings.account')}</Text>
@@ -205,7 +202,28 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+    marginBottom: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  themeCopy: {
+    flex: 1,
+  },
   rowLabel: { ...typography.body, color: colors.text },
+  themeHint: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
   message: { ...typography.caption, color: colors.success, marginTop: spacing.md },
   back: { marginTop: spacing.xl, padding: spacing.sm },
   backText: { color: colors.primary, fontWeight: '700', textAlign: 'center' },
