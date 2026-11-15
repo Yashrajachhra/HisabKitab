@@ -14,11 +14,13 @@
       "infoPlist": {
         "NSCameraUsageDescription": "HisabKitab uses the camera only to scan receipts on your device. Images are never uploaded.",
         "NSMicrophoneUsageDescription": "HisabKitab uses the microphone only for on-device voice expense entry. Audio never leaves your phone.",
-        "NSFaceIDUsageDescription": "Unlock HisabKitab with biometrics. Your financial data stays on this device."
+        "NSFaceIDUsageDescription": "Unlock HisabKitab with biometrics. Your financial data stays on this device.",
+        "NSSpeechRecognitionUsageDescription": "HisabKitab uses on-device speech recognition to turn phrases like “Spent 200 on lunch” into expenses. Audio is not uploaded."
       }
     },
     "android": {
       "package": "com.hisabkitab.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,9 +28,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "POST_NOTIFICATIONS"
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.RECORD_AUDIO"
       ],
       "blockedPermissions": [
         "READ_CONTACTS",
@@ -100,8 +104,18 @@
     },
     "extra": {
       "eas": {
-        "projectId": "replace-with-eas-project-id"
+        "projectId": "d607e3b9-41a7-402d-810e-d4b19f57831e"
+      },
+      "router": {
+        "headers": {
+          "Cross-Origin-Embedder-Policy": "credentialless",
+          "Cross-Origin-Opener-Policy": "same-origin"
+        },
+        "asyncRoutes": {
+          "web": true
+        }
       }
-    }
+    },
+    "owner": "yashrajachhra"
   }
 }

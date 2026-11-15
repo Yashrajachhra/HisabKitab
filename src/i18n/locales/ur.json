@@ -36,13 +36,17 @@
     "registerHint": "مشترکہ ہاسٹل اور میس لیجر کے لیے اکاؤنٹ بنائیں۔",
     "email": "ای میل",
     "password": "پاس ورڈ",
-    "passwordPlaceholder": "پاس ورڈ درج کریں",
+    "passwordPlaceholder": "کم از کم 8 حروف",
     "displayName": "نام",
     "displayNamePlaceholder": "دوست آپ کو کیسے دیکھیں",
     "login": "سائن ان",
     "register": "سائن اپ",
     "goRegister": "اکاؤنٹ نہیں؟ رجسٹر کریں",
-    "legal": "جاری رکھ کر آپ شرائط اور پرائیویسی پالیسی سے اتفاق کرتے ہیں"
+    "legal": "جاری رکھ کر آپ شرائط اور پرائیویسی پالیسی سے اتفاق کرتے ہیں",
+    "requiredFields": "ای میل اور پاس ورڈ درکار ہیں۔",
+    "displayNameTooShort": "نام کم از کم 2 حروف کا ہو۔",
+    "emailInvalid": "درست ای میل درج کریں۔",
+    "passwordTooShort": "پاس ورڈ کم از کم 8 حروف کا ہو۔"
   },
   "groups": {
     "title": "گروپس",

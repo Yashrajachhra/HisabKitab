@@ -35,11 +35,29 @@ export function AuthCard({ initialTab = 'signin' }: AuthCardProps) {
     setError(null);
     try {
       if (tab === 'signin') {
+        if (!email.trim() || !password) {
+          setError(t('auth.requiredFields'));
+          return;
+        }
         await login({ email: email.trim(), password });
       } else {
+        const name = displayName.trim();
+        const mail = email.trim();
+        if (name.length < 2) {
+          setError(t('auth.displayNameTooShort'));
+          return;
+        }
+        if (!mail.includes('@')) {
+          setError(t('auth.emailInvalid'));
+          return;
+        }
+        if (password.length < 8) {
+          setError(t('auth.passwordTooShort'));
+          return;
+        }
         await register({
-          displayName: displayName.trim(),
-          email: email.trim(),
+          displayName: name,
+          email: mail,
           password,
         });
       }

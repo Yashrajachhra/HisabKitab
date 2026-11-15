@@ -36,13 +36,17 @@
     "registerHint": "Create an account for shared hostel and mess ledgers.",
     "email": "Email",
     "password": "Password",
-    "passwordPlaceholder": "Enter your password",
+    "passwordPlaceholder": "At least 8 characters",
     "displayName": "Display name",
     "displayNamePlaceholder": "How friends see you",
     "login": "Sign In",
     "register": "Sign Up",
     "goRegister": "Need an account? Register",
-    "legal": "By continuing, you agree to our Terms of Service and Privacy Policy"
+    "legal": "By continuing, you agree to our Terms of Service and Privacy Policy",
+    "requiredFields": "Email and password are required.",
+    "displayNameTooShort": "Display name must be at least 2 characters.",
+    "emailInvalid": "Enter a valid email address.",
+    "passwordTooShort": "Password must be at least 8 characters."
   },
   "groups": {
     "title": "Groups",

@@ -82,11 +82,36 @@ export async function apiRequest<T>(path: string, options: ApiOptions = {}): Pro
 
   const data: unknown = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const message =
-      typeof data === 'object' && data && 'error' in data && typeof data.error === 'string'
-        ? data.error
-        : `Request failed (${res.status})`;
-    throw new Error(message);
+    throw new Error(formatApiError(data, res.status));
   }
   return data as T;
+}
+
+function formatApiError(data: unknown, status: number): string {
+  if (!data || typeof data !== 'object') {
+    return `Request failed (${status})`;
+  }
+
+  const details = 'details' in data && Array.isArray(data.details) ? data.details : null;
+  if (details && details.length > 0) {
+    const parts = details
+      .map((issue) => {
+        if (!issue || typeof issue !== 'object') return null;
+        const path =
+          'path' in issue && typeof issue.path === 'string' && issue.path.length > 0
+            ? issue.path
+            : null;
+        const message =
+          'message' in issue && typeof issue.message === 'string' ? issue.message : null;
+        if (!message) return null;
+        return path ? `${path}: ${message}` : message;
+      })
+      .filter((part): part is string => Boolean(part));
+    if (parts.length > 0) return parts.join(' · ');
+  }
+
+  if ('error' in data && typeof data.error === 'string') {
+    return data.error;
+  }
+  return `Request failed (${status})`;
 }
