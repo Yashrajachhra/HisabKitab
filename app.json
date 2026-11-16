@@ -2,7 +2,7 @@
   "expo": {
     "name": "HisabKitab",
     "slug": "hisabkitab",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "hisabkitab",
@@ -13,14 +13,14 @@
       "bundleIdentifier": "com.hisabkitab.app",
       "infoPlist": {
         "NSCameraUsageDescription": "HisabKitab uses the camera only to scan receipts on your device. Images are never uploaded.",
-        "NSMicrophoneUsageDescription": "HisabKitab uses the microphone only for on-device voice expense entry. Audio never leaves your phone.",
+        "NSMicrophoneUsageDescription": "HisabKitab uses the microphone to turn spoken expense phrases into entries.",
         "NSFaceIDUsageDescription": "Unlock HisabKitab with biometrics. Your financial data stays on this device.",
-        "NSSpeechRecognitionUsageDescription": "HisabKitab uses on-device speech recognition to turn phrases like “Spent 200 on lunch” into expenses. Audio is not uploaded."
+        "NSSpeechRecognitionUsageDescription": "HisabKitab uses speech recognition to turn phrases like “Spent 200 on lunch” into expenses."
       }
     },
     "android": {
       "package": "com.hisabkitab.app",
-      "versionCode": 1,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -89,8 +89,8 @@
       [
         "expo-speech-recognition",
         {
-          "microphonePermission": "HisabKitab uses the microphone only for on-device voice expense entry. Audio never leaves your phone.",
-          "speechRecognitionPermission": "HisabKitab uses on-device speech recognition to turn phrases like “Spent 200 on lunch” into expenses. Audio is not uploaded.",
+          "microphonePermission": "HisabKitab uses the microphone to turn spoken expense phrases into entries.",
+          "speechRecognitionPermission": "HisabKitab uses speech recognition to turn phrases like “Spent 200 on lunch” into expenses.",
           "androidSpeechServicePackages": [
             "com.google.android.googlequicksearchbox"
           ]

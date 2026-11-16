@@ -13,6 +13,8 @@ import { makeStyles } from '../../src/theme/ThemeProvider';
 import { deleteAllLocalData } from '../../src/db/repositories/dataLifecycle';
 import { listRecentExpenses } from '../../src/db/repositories/expensesRepo';
 import { isAppLockEnabled, setAppLockEnabled, setAppPin } from '../../src/services/appLock';
+import { getApiBaseUrl } from '../../src/services/api/client';
+import { hydrateApiBaseUrl, saveApiBaseUrl } from '../../src/services/api/config';
 import { exportExpensesCsv, exportExpensesPdf } from '../../src/services/export';
 import { useAuthStore } from '../../src/store/authStore';
 import { useAppStore } from '../../src/store/appStore';
@@ -28,14 +30,26 @@ export default function SettingsScreen() {
 
   const [lockEnabled, setLockEnabled] = useState(false);
   const [pin, setPin] = useState('');
+  const [apiUrl, setApiUrl] = useState(getApiBaseUrl());
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     void (async () => {
       setLockEnabled(await isAppLockEnabled());
+      setApiUrl(await hydrateApiBaseUrl());
     })();
   }, []);
+
+  const onSaveApiUrl = async () => {
+    try {
+      const saved = await saveApiBaseUrl(apiUrl);
+      setApiUrl(saved);
+      setMessage(t('settings.apiUrlSaved'));
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : t('common.error'));
+    }
+  };
 
   const onExportCsv = async () => {
     setBusy(true);
@@ -153,6 +167,18 @@ export default function SettingsScreen() {
         </View>
         <ThemeToggle />
       </View>
+
+      <Text style={styles.section}>{t('settings.server')}</Text>
+      <Text style={styles.themeHint}>{t('settings.apiUrlHint')}</Text>
+      <TextField
+        label={t('settings.apiUrl')}
+        value={apiUrl}
+        onChangeText={setApiUrl}
+        autoCapitalize="none"
+        autoCorrect={false}
+        placeholder="https://your-api.example.com"
+      />
+      <Button label={t('settings.saveApiUrl')} onPress={() => void onSaveApiUrl()} />
 
       <Text style={styles.section}>{t('settings.categories')}</Text>
       <View style={styles.categoryList}>

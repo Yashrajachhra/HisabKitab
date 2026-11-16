@@ -3,8 +3,28 @@ import { getSecureItem, setSecureItem, deleteSecureItem } from '../../utils/secu
 const ACCESS_KEY = 'hk_access_token';
 const REFRESH_KEY = 'hk_refresh_token';
 
+let apiBaseUrlOverride: string | null = null;
+
+/** Optional runtime override (e.g. from Settings) for release builds. */
+export function setApiBaseUrlOverride(url: string | null): void {
+  const trimmed = url?.trim() ?? '';
+  apiBaseUrlOverride = trimmed.length > 0 ? trimmed.replace(/\/$/, '') : null;
+}
+
 export function getApiBaseUrl(): string {
-  return process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:4000';
+  if (apiBaseUrlOverride) return apiBaseUrlOverride;
+  const fromEnv = process.env.EXPO_PUBLIC_API_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  return 'http://localhost:4000';
+}
+
+export function isLocalApiUrl(url: string = getApiBaseUrl()): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host === '10.0.2.2';
+  } catch {
+    return /localhost|127\.0\.0\.1|10\.0\.2\.2/i.test(url);
+  }
 }
 
 export async function getAccessToken(): Promise<string | null> {

@@ -1,0 +1,30 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - hk_mongo_data:/data/db
+    ports:
+      - "27017:27017"
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: "4000"
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017/hisabkitab
+      JWT_ACCESS_SECRET: hk-access-change-in-prod-8f3a2c1b9e7d
+      JWT_REFRESH_SECRET: hk-refresh-change-in-prod-4d6e8a0c2b5f
+      JWT_ACCESS_TTL: 15m
+      JWT_REFRESH_TTL: 30d
+      CORS_ORIGIN: "*"
+      RATE_LIMIT_WINDOW_MS: "900000"
+      RATE_LIMIT_MAX: "500"
+
+volumes:
+  hk_mongo_data:

@@ -15,15 +15,26 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://pen-compete-therefore-recommended.trycloudflare.com",
+        "EXPO_PUBLIC_LAUNCH_PHASE": "ALL_FREE",
+        "EXPO_PUBLIC_FORCE_PLUS": "1"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://pen-compete-therefore-recommended.trycloudflare.com",
+        "EXPO_PUBLIC_LAUNCH_PHASE": "ALL_FREE",
+        "EXPO_PUBLIC_FORCE_PLUS": "1"
       }
     },
     "production-apk": {
       "extends": "production",
+      "distribution": "internal",
       "android": {
         "buildType": "apk"
       }

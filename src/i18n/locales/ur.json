@@ -46,7 +46,9 @@
     "requiredFields": "ای میل اور پاس ورڈ درکار ہیں۔",
     "displayNameTooShort": "نام کم از کم 2 حروف کا ہو۔",
     "emailInvalid": "درست ای میل درج کریں۔",
-    "passwordTooShort": "پاس ورڈ کم از کم 8 حروف کا ہو۔"
+    "passwordTooShort": "پاس ورڈ کم از کم 8 حروف کا ہو۔",
+    "serverUnreachableLocal": "سائن ان کے لیے کلاؤڈ API درکار ہے۔ یہ انسٹال اب بھی localhost استعمال کرتا ہے، جو فون پر نہیں چلتا۔ ذاتی اخراجات بغیر سائن ان کے چلتے ہیں۔",
+    "serverUnreachable": "HisabKitab سرور تک رسائی نہیں ({{url}})۔ انٹرنیٹ چیک کریں یا Settings میں API URL سیٹ کریں۔"
   },
   "groups": {
     "title": "گروپس",
@@ -180,7 +182,8 @@
   },
   "voice": {
     "title": "آوازی اندراج",
-    "privacy": "تقریر اسی ڈیوائس پر رہتی ہے۔ آڈیو کلاؤڈ پر نہیں بھیجی جاتی۔",
+    "privacy": "آواز فون کی speech service استعمال کرتی ہے۔ دستیاب ہو تو آف لائن ترجیح؛ آپ جملہ لکھ بھی سکتے ہیں۔",
+    "privacyOnDevice": "اس فون پر آن ڈیوائس تقریر دستیاب ہے۔ ممکن ہو تو آڈیو مقامی پروسیس ہوتی ہے۔",
     "examples": "آزمائیں: “Spent 200 on lunch” یا “Paid 150 rupees for chai”.",
     "start": "سننا شروع کریں",
     "stop": "سننا بند کریں",
@@ -237,6 +240,11 @@
     "categoryPlaceholder": "مثلاً جم، میس، کیفے",
     "categoryHint": "اپنے زمرے Quick-Tap اور اخراجات میں دکھائیں — کوئی حد نہیں۔",
     "categoryAdded": "زمرہ شامل ہو گیا۔",
+    "server": "گروپس API",
+    "apiUrl": "API پتہ",
+    "apiUrlHint": "سائن ان اور ہاسٹل گروپس کے لیے HTTPS پتہ۔ ذاتی اخراجات اسی فون پر رہتے ہیں۔",
+    "apiUrlSaved": "API پتہ محفوظ۔",
+    "saveApiUrl": "API پتہ محفوظ کریں",
     "account": "اکاؤنٹ",
     "logout": "لاگ آؤٹ",
     "deleteAccount": "اکاؤنٹ سیشن حذف",

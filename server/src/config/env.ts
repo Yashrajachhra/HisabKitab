@@ -18,7 +18,11 @@ export const env = {
   jwtRefreshSecret: required('JWT_REFRESH_SECRET', 'dev-refresh-secret-change-me'),
   jwtAccessTtl: process.env.JWT_ACCESS_TTL ?? '15m',
   jwtRefreshTtl: process.env.JWT_REFRESH_TTL ?? '30d',
-  corsOrigin: process.env.CORS_ORIGIN?.split(',') ?? true,
+  // "*" or unset → allow any origin (needed for React Native / APK clients).
+  corsOrigin:
+    !process.env.CORS_ORIGIN || process.env.CORS_ORIGIN.trim() === '*'
+      ? true
+      : process.env.CORS_ORIGIN.split(',').map((v) => v.trim()).filter(Boolean),
   rateLimitWindowMs: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000', 10),
   rateLimitMax: Number.parseInt(process.env.RATE_LIMIT_MAX ?? '200', 10),
 };

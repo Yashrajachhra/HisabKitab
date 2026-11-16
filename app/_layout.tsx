@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../src/i18n';
 import { AppLockGate } from '../src/components/AppLockGate';
 import { makeStyles, ThemeProvider, useTheme } from '../src/theme/ThemeProvider';
+import { hydrateApiBaseUrl } from '../src/services/api/config';
 import { useAppStore } from '../src/store/appStore';
 import { useAuthStore } from '../src/store/authStore';
 import { useOnboardingStore } from '../src/store/onboardingStore';
@@ -34,7 +35,12 @@ function RootNavigator() {
 
   useEffect(() => {
     // Boot must always complete; individual loaders catch their own errors.
-    void Promise.allSettled([loadOnboarding(), hydrate(), hydrateAuth()]);
+    void Promise.allSettled([
+      hydrateApiBaseUrl(),
+      loadOnboarding(),
+      hydrate(),
+      hydrateAuth(),
+    ]);
   }, [hydrate, loadOnboarding, hydrateAuth]);
 
   // Hard failsafe: never leave the UI on an infinite spinner (e.g. SQLite web hang).

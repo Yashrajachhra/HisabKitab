@@ -8,6 +8,7 @@ import { Button } from '../ui/Button';
 import { TextField } from '../ui/TextField';
 import { radii, spacing, typography } from '../../config/theme';
 import { makeStyles } from '../../theme/ThemeProvider';
+import { getApiBaseUrl, isLocalApiUrl } from '../../services/api/client';
 import { useAuthStore } from '../../store/authStore';
 
 type AuthTab = 'signin' | 'signup';
@@ -34,6 +35,10 @@ export function AuthCard({ initialTab = 'signin' }: AuthCardProps) {
     setLoading(true);
     setError(null);
     try {
+      if (isLocalApiUrl()) {
+        setError(t('auth.serverUnreachableLocal'));
+        return;
+      }
       if (tab === 'signin') {
         if (!email.trim() || !password) {
           setError(t('auth.requiredFields'));
@@ -63,7 +68,12 @@ export function AuthCard({ initialTab = 'signin' }: AuthCardProps) {
       }
       router.replace('/groups' as Href);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'));
+      const raw = err instanceof Error ? err.message : t('common.error');
+      if (/CLEARTEXT|UnknownServiceException|Network request failed|Failed to fetch|ECONNREFUSED/i.test(raw)) {
+        setError(t('auth.serverUnreachable', { url: getApiBaseUrl() }));
+      } else {
+        setError(raw);
+      }
     } finally {
       setLoading(false);
     }

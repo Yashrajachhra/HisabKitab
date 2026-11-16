@@ -10,21 +10,23 @@ import { TextField } from '../../src/components/ui/TextField';
 import { radii, spacing, typography } from '../../src/config/theme';
 import { makeStyles } from '../../src/theme/ThemeProvider';
 import { parseVoiceExpense } from '../../src/features/voice/parseVoiceExpense';
-import {
-  VoiceNativeUnavailableError,
-  VoiceOnDeviceUnavailableError,
-} from '../../src/services/voice';
+import { VoiceNativeUnavailableError } from '../../src/services/voice';
 import { ensureSpeechPermission } from '../../src/services/voice/permissions';
 import { useVoiceDraftStore } from '../../src/store/voiceDraftStore';
 
 type UiError = { title: string; body: string };
 
+function probeSpeechAvailable(): boolean {
+  try {
+    return Platform.OS !== 'web' && ExpoSpeechRecognitionModule.isRecognitionAvailable();
+  } catch {
+    return false;
+  }
+}
+
 function probeOnDeviceSpeech(): boolean {
   try {
-    return (
-      ExpoSpeechRecognitionModule.isRecognitionAvailable() &&
-      ExpoSpeechRecognitionModule.supportsOnDeviceRecognition()
-    );
+    return ExpoSpeechRecognitionModule.supportsOnDeviceRecognition();
   } catch {
     return false;
   }
@@ -39,18 +41,16 @@ export default function VoiceCaptureScreen() {
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [speechReady, setSpeechReady] = useState(false);
+  const [preferOnDevice, setPreferOnDevice] = useState(false);
   const [error, setError] = useState<UiError | null>(null);
 
   useEffect(() => {
-    const ready = Platform.OS !== 'web' && probeOnDeviceSpeech();
-    setSpeechReady(ready);
-    if (!ready) {
-      setError({
-        title: t('voice.onDeviceTitle'),
-        body: t('voice.onDeviceBody'),
-      });
-    }
-  }, [t]);
+    const available = probeSpeechAvailable();
+    const onDevice = available && probeOnDeviceSpeech();
+    setSpeechReady(available);
+    setPreferOnDevice(onDevice);
+    setError(null);
+  }, []);
 
   useSpeechRecognitionEvent('start', () => setListening(true));
   useSpeechRecognitionEvent('end', () => setListening(false));
@@ -60,7 +60,6 @@ export default function VoiceCaptureScreen() {
   });
   useSpeechRecognitionEvent('error', (event) => {
     setListening(false);
-    // Never log transcript or financial content.
     if (event.error === 'not-allowed') {
       setError({
         title: t('voice.micDeniedTitle'),
@@ -69,10 +68,9 @@ export default function VoiceCaptureScreen() {
       return;
     }
     if (event.error === 'service-not-allowed' || event.error === 'language-not-supported') {
-      setSpeechReady(false);
       setError({
-        title: t('voice.onDeviceTitle'),
-        body: t('voice.onDeviceBody'),
+        title: t('voice.failedTitle'),
+        body: t('voice.failedBody'),
       });
       return;
     }
@@ -110,30 +108,38 @@ export default function VoiceCaptureScreen() {
         throw new VoiceNativeUnavailableError();
       }
 
-      if (!ExpoSpeechRecognitionModule.supportsOnDeviceRecognition()) {
-        throw new VoiceOnDeviceUnavailableError();
-      }
+      const onDevice = probeOnDeviceSpeech();
+      setPreferOnDevice(onDevice);
 
       const startOptions = {
         interimResults: true,
         continuous: false,
-        requiresOnDeviceRecognition: true,
+        // Prefer on-device when the phone supports it; otherwise allow the
+        // device speech service so Voice works on more Android phones.
+        requiresOnDeviceRecognition: onDevice,
         addsPunctuation: false,
       } as const;
 
       try {
         ExpoSpeechRecognitionModule.start({ ...startOptions, lang: 'en-PK' });
       } catch {
-        ExpoSpeechRecognitionModule.start({ ...startOptions, lang: 'en-US' });
+        try {
+          ExpoSpeechRecognitionModule.start({ ...startOptions, lang: 'en-US' });
+        } catch {
+          // Last resort: start without forcing on-device.
+          ExpoSpeechRecognitionModule.start({
+            interimResults: true,
+            continuous: false,
+            requiresOnDeviceRecognition: false,
+            addsPunctuation: false,
+            lang: 'en-US',
+          });
+        }
       }
     } catch (err) {
       setListening(false);
-      setSpeechReady(false);
-      if (err instanceof VoiceOnDeviceUnavailableError) {
-        setError({ title: t('voice.onDeviceTitle'), body: t('voice.onDeviceBody') });
-        return;
-      }
       if (err instanceof VoiceNativeUnavailableError) {
+        setSpeechReady(false);
         setError({ title: t('voice.nativeTitle'), body: t('voice.nativeBody') });
         return;
       }
@@ -153,13 +159,22 @@ export default function VoiceCaptureScreen() {
 
   return (
     <Screen title={t('voice.title')}>
-      <Text style={styles.privacy}>{t('voice.privacy')}</Text>
+      <Text style={styles.privacy}>
+        {preferOnDevice ? t('voice.privacyOnDevice') : t('voice.privacy')}
+      </Text>
       <Text style={styles.examples}>{t('voice.examples')}</Text>
 
       {error ? (
         <View style={styles.errorBox} accessibilityRole="alert">
           <Text style={styles.errorTitle}>{error.title}</Text>
           <Text style={styles.errorBody}>{error.body}</Text>
+        </View>
+      ) : null}
+
+      {!speechReady ? (
+        <View style={styles.infoBox} accessibilityRole="summary">
+          <Text style={styles.errorTitle}>{t('voice.onDeviceTitle')}</Text>
+          <Text style={styles.errorBody}>{t('voice.onDeviceBody')}</Text>
         </View>
       ) : null}
 
@@ -176,15 +191,15 @@ export default function VoiceCaptureScreen() {
         ) : (
           <Button label={t('voice.stop')} variant="secondary" onPress={stopListening} />
         )
-      ) : (
-        <TextField
-          label={t('voice.typeFallbackLabel')}
-          value={transcript}
-          onChangeText={setTranscript}
-          placeholder={t('voice.typeFallbackPlaceholder')}
-          autoCapitalize="sentences"
-        />
-      )}
+      ) : null}
+
+      <TextField
+        label={t('voice.typeFallbackLabel')}
+        value={transcript}
+        onChangeText={setTranscript}
+        placeholder={t('voice.typeFallbackPlaceholder')}
+        autoCapitalize="sentences"
+      />
 
       <Button
         label={t('voice.useTranscript')}
@@ -242,6 +257,14 @@ const useStyles = makeStyles((colors) => ({
   errorBox: {
     backgroundColor: colors.surfaceMuted,
     borderRadius: radii.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  infoBox: {
+    backgroundColor: colors.primaryMuted,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
     padding: spacing.md,
     marginBottom: spacing.md,
   },
