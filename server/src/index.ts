@@ -10,7 +10,23 @@ import { groupsRouter } from './routes/groups';
 import { healthRouter } from './routes/health';
 
 const app = express();
-if (process.env.VERCEL) app.set('trust proxy', 1);
+if (process.env.VERCEL) {
+  app.set('trust proxy', 1);
+  let mongoPromise: Promise<void> | null = null;
+  app.use((req, _res, next) => {
+    if (req.path === '/' || req.path === '/health') {
+      next();
+      return;
+    }
+    if (!mongoPromise) {
+      mongoPromise = connectMongo().catch((err) => {
+        mongoPromise = null;
+        throw err;
+      });
+    }
+    mongoPromise.then(() => next()).catch(() => next());
+  });
+}
 
 app.use(helmet());
 app.use(
@@ -57,4 +73,5 @@ async function boot(): Promise<void> {
 
 void boot();
 
+export default app;
 export { app };
