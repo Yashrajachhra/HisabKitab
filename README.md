@@ -1,5 +1,6 @@
 # HisabKitab
 
+
 Privacy-first personal and group expense tracker for university students in Pakistan (hostel / mess bill splitting).
 
 **Currency:** PKR (integer minor units / paisa)  
