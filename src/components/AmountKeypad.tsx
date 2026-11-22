@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AMOUNT_PRESETS_PKR } from '../config/constants';
-import { radii, spacing, typography } from '../config/theme';
-import { makeStyles } from '../theme/ThemeProvider';
+import { radii, shadows, spacing, tabular, typography } from '../config/theme';
+import { makeStyles, useTheme } from '../theme/ThemeProvider';
 import { MAX_CONTENT_WIDTH, useResponsive } from '../hooks/useResponsive';
 import { formatPkr, parseAmountInput, toMinorUnits } from '../utils/money';
 import { Button } from './ui/Button';
@@ -17,6 +18,13 @@ type AmountKeypadProps = {
   confirming?: boolean;
 };
 
+const KEY_ROWS = [
+  ['1', '2', '3'],
+  ['4', '5', '6'],
+  ['7', '8', '9'],
+  ['.', '0', '⌫'],
+] as const;
+
 export function AmountKeypad({
   categoryName,
   onConfirm,
@@ -24,13 +32,15 @@ export function AmountKeypad({
   confirming = false,
 }: AmountKeypadProps) {
   const styles = useStyles();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { isShort, scale } = useResponsive();
   const [digits, setDigits] = useState('');
 
   const amountMinor = useMemo(() => parseAmountInput(digits) ?? 0, [digits]);
-  const display = digits.length > 0 ? formatPkr(amountMinor) : formatPkr(0);
+  const displayValue = formatPkr(amountMinor, { withSymbol: false });
+  const canConfirm = amountMinor > 0 && !confirming;
 
   const append = (ch: string) => {
     setDigits((prev) => {
@@ -46,29 +56,40 @@ export function AmountKeypad({
 
   const backspace = () => setDigits((prev) => prev.slice(0, -1));
 
-  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'] as const;
-
   return (
     <View
       style={[styles.sheet, { paddingBottom: spacing.md + insets.bottom }]}
       accessibilityViewIsModal
     >
-      <Text style={styles.heading}>{t('quickTap.title')}</Text>
-      <Text style={styles.category} numberOfLines={1}>
-        {categoryName}
-      </Text>
-      <Text
-        style={[
-          styles.amount,
-          { fontSize: scale(typography.amount.fontSize) },
-          isShort ? styles.amountCompact : null,
-        ]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        accessibilityLiveRegion="polite"
-      >
-        {display}
-      </Text>
+      <View style={styles.handle} />
+
+      <View style={styles.amountCard}>
+        <View style={styles.categoryPill}>
+          <Text style={styles.categoryPillText} numberOfLines={1}>
+            {`${t('quickTap.title')} • ${categoryName}`}
+          </Text>
+        </View>
+
+        <View
+          style={styles.amountRow}
+          accessible
+          accessibilityLiveRegion="polite"
+          accessibilityLabel={formatPkr(amountMinor)}
+        >
+          <Text style={styles.currencyPrefix}>Rs.</Text>
+          <Text
+            style={[
+              styles.amountValue,
+              { fontSize: scale(typography.amount.fontSize) },
+              isShort ? styles.amountCompact : null,
+            ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
+            {displayValue}
+          </Text>
+        </View>
+      </View>
 
       <View style={styles.presets}>
         {AMOUNT_PRESETS_PKR.map((preset) => (
@@ -81,29 +102,41 @@ export function AmountKeypad({
             }}
             style={({ pressed }) => [styles.preset, pressed ? styles.pressed : null]}
           >
-            <Text style={styles.presetText}>Rs {preset}</Text>
+            <Text style={styles.presetText}>Rs. {preset}</Text>
           </Pressable>
         ))}
       </View>
 
       <View style={styles.keypad}>
-        {keys.map((key) => (
-          <Pressable
-            key={key}
-            accessibilityRole="button"
-            accessibilityLabel={key === '⌫' ? 'Backspace' : key}
-            onPress={() => {
-              if (key === '⌫') backspace();
-              else append(key);
-            }}
-            style={({ pressed }) => [
-              styles.key,
-              isShort ? styles.keyCompact : null,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text style={[styles.keyText, { fontSize: scale(22) }]}>{key}</Text>
-          </Pressable>
+        {KEY_ROWS.map((row, rowIdx) => (
+          <View key={rowIdx} style={styles.keyRow}>
+            {row.map((key) => {
+              const isBackspace = key === '⌫';
+              return (
+                <Pressable
+                  key={key}
+                  accessibilityRole="button"
+                  accessibilityLabel={isBackspace ? 'Backspace' : key}
+                  onPress={() => {
+                    if (isBackspace) backspace();
+                    else append(key);
+                  }}
+                  style={({ pressed }) => [
+                    styles.key,
+                    isBackspace ? styles.keyBackspace : null,
+                    isShort ? styles.keyCompact : null,
+                    pressed ? styles.keyPressed : null,
+                  ]}
+                >
+                  {isBackspace ? (
+                    <Ionicons name="backspace-outline" size={22} color={colors.danger} />
+                  ) : (
+                    <Text style={[styles.keyText, { fontSize: scale(22) }]}>{key}</Text>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
         ))}
       </View>
 
@@ -112,17 +145,39 @@ export function AmountKeypad({
           label={t('quickTap.cancel')}
           variant="ghost"
           onPress={onCancel}
-          style={styles.flex}
+          style={styles.cancelBtn}
         />
-        <Button
-          label={t('quickTap.confirm')}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('quickTap.confirm')}
+          accessibilityState={{ disabled: !canConfirm, busy: confirming }}
+          disabled={!canConfirm}
           onPress={() => {
             if (amountMinor > 0) onConfirm(amountMinor);
           }}
-          disabled={amountMinor <= 0}
-          loading={confirming}
-          style={styles.flex}
-        />
+          style={({ pressed }) => [
+            styles.confirmBtn,
+            amountMinor > 0 ? styles.confirmBtnBetween : styles.confirmBtnCenter,
+            !canConfirm ? styles.disabled : null,
+            pressed && canConfirm ? styles.pressed : null,
+          ]}
+        >
+          {confirming ? (
+            <ActivityIndicator color={colors.onPrimary} />
+          ) : (
+            <>
+              <View style={styles.confirmLeft}>
+                <Ionicons name="checkmark-circle" size={20} color={colors.accent} />
+                <Text style={styles.confirmText}>{t('quickTap.confirm')}</Text>
+              </View>
+              {amountMinor > 0 ? (
+                <View style={styles.confirmBadge}>
+                  <Text style={styles.confirmBadgeText}>{formatPkr(amountMinor)}</Text>
+                </View>
+              ) : null}
+            </>
+          )}
+        </Pressable>
       </View>
     </View>
   );
@@ -133,74 +188,167 @@ const useStyles = makeStyles((colors) => ({
     width: '100%',
     maxWidth: MAX_CONTENT_WIDTH,
     alignSelf: 'center',
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    padding: spacing.md,
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm + 4,
     borderTopWidth: 1,
     borderColor: colors.border,
+    ...shadows.modal,
   },
-  heading: {
-    ...typography.subtitle,
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: radii.pill,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.sm + 4,
+  },
+  amountCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    marginBottom: spacing.sm + 4,
+    ...shadows.soft,
+  },
+  categoryPill: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radii.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
+  categoryPillText: {
+    ...typography.labelMd,
     color: colors.textSecondary,
   },
-  category: {
-    ...typography.title,
-    color: colors.text,
-    marginTop: spacing.xs,
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: spacing.sm,
   },
-  amount: {
+  currencyPrefix: {
+    ...typography.title,
+    color: colors.textSecondary,
+    fontWeight: '700',
+  },
+  amountValue: {
     ...typography.amount,
-    color: colors.primary,
-    marginVertical: spacing.md,
+    color: colors.text,
+    ...tabular,
   },
   amountCompact: {
-    marginVertical: spacing.sm,
+    fontSize: 28,
   },
   presets: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm + 4,
   },
   preset: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surfaceMuted,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+    ...shadows.soft,
   },
   presetText: {
-    color: colors.primary,
-    fontWeight: '600',
+    ...typography.labelMd,
+    color: colors.text,
+    ...tabular,
   },
   keypad: {
+    gap: spacing.sm,
+  },
+  keyRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
   key: {
-    width: '33.33%',
-    paddingVertical: spacing.md,
+    flex: 1,
+    height: 52,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.soft,
+  },
+  keyBackspace: {
+    backgroundColor: colors.surfaceMuted,
   },
   keyCompact: {
-    paddingVertical: spacing.sm + 2,
+    height: 44,
+  },
+  keyPressed: {
+    backgroundColor: colors.surfaceMuted,
+    transform: [{ scale: 0.98 }],
   },
   keyText: {
     fontSize: 22,
     color: colors.text,
-    fontWeight: '600',
+    fontWeight: '700',
+    ...tabular,
   },
   pressed: {
-    opacity: 0.7,
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  disabled: {
+    opacity: 0.5,
   },
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
   },
-  flex: {
+  cancelBtn: {
     flex: 1,
+  },
+  confirmBtn: {
+    flex: 2,
+    minHeight: 50,
+    borderRadius: radii.md,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  confirmBtnBetween: {
+    justifyContent: 'space-between',
+  },
+  confirmBtnCenter: {
+    justifyContent: 'center',
+  },
+  confirmLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  confirmText: {
+    ...typography.labelLg,
+    color: colors.onPrimary,
+  },
+  confirmBadge: {
+    backgroundColor: colors.accent,
+    borderRadius: radii.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  confirmBadgeText: {
+    ...typography.labelMd,
+    color: colors.onNavy,
+    ...tabular,
   },
 }));

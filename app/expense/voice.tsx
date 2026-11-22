@@ -207,12 +207,6 @@ export default function VoiceCaptureScreen() {
         disabled={!transcript.trim()}
         style={styles.gap}
       />
-      <Button
-        label={t('common.back')}
-        variant="ghost"
-        onPress={() => router.back()}
-        style={styles.gap}
-      />
     </Screen>
   );
 }

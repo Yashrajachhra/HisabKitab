@@ -57,7 +57,7 @@ async function openDatabase(): Promise<AppDatabase> {
     return memoryDb;
   }
 
-  const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+  let db = await SQLite.openDatabaseAsync(DATABASE_NAME);
 
   try {
     await applyEncryption(db);
@@ -69,9 +69,33 @@ async function openDatabase(): Promise<AppDatabase> {
     }
   }
 
-  await db.execAsync('PRAGMA foreign_keys = ON;');
-  await migrate(db);
-  return db;
+  try {
+    await db.execAsync('PRAGMA foreign_keys = ON;');
+    await migrate(db);
+    return db;
+  } catch {
+    // On Samsung / Android Auto-Backup, a restored DB file can mismatch a newly
+    // generated Keystore key (SQLITE_NOTADB). Reset and re-initialize cleanly.
+    try {
+      await db.closeAsync();
+    } catch {
+      // ignore close errors
+    }
+    try {
+      await SQLite.deleteDatabaseAsync(DATABASE_NAME);
+    } catch {
+      // ignore delete errors
+    }
+    db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+    try {
+      await applyEncryption(db);
+    } catch {
+      // continue unencrypted if cipher pragma fails
+    }
+    await db.execAsync('PRAGMA foreign_keys = ON;');
+    await migrate(db);
+    return db;
+  }
 }
 
 export function getDatabase(): Promise<AppDatabase> {

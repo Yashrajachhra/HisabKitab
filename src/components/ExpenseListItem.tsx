@@ -1,9 +1,9 @@
 import type { ComponentProps } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { categoryVisual, radii, shadows, spacing, typography, withAlpha } from '../config/theme';
-import { makeStyles } from '../theme/ThemeProvider';
+import { categoryVisual, radii, shadows, spacing, tabular, typography } from '../config/theme';
+import { makeStyles, useTheme } from '../theme/ThemeProvider';
 import type { ExpenseWithCategory } from '../db/types';
 import { formatPkr } from '../utils/money';
 
@@ -11,73 +11,126 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type ExpenseListItemProps = {
   expense: ExpenseWithCategory;
+  onEdit?: (expense: ExpenseWithCategory) => void;
+  onDelete?: (expense: ExpenseWithCategory) => void;
 };
 
-export function ExpenseListItem({ expense }: ExpenseListItemProps) {
+export function ExpenseListItem({ expense, onEdit, onDelete }: ExpenseListItemProps) {
   const styles = useStyles();
+  const { colors } = useTheme();
   const visual = categoryVisual({
     name: expense.categoryName,
     icon: expense.categoryIcon,
     color: expense.categoryColor,
   });
+  const hasNote = Boolean(expense.note?.trim());
+  const title = hasNote ? expense.note!.trim() : expense.categoryName;
+
   return (
     <View
-      style={styles.row}
+      style={styles.card}
       accessible
       accessibilityLabel={`${expense.categoryName}, ${formatPkr(expense.amountMinor)}, ${expense.date}`}
     >
-      <View style={[styles.iconWrap, { backgroundColor: withAlpha(visual.color, 0.14) }]}>
-        <Ionicons name={visual.icon as IconName} size={20} color={visual.color} />
+      <View style={[styles.iconBox, { backgroundColor: visual.bgColor }]}>
+        <Ionicons name={visual.icon as IconName} size={22} color={visual.color} />
       </View>
+
       <View style={styles.meta}>
-        <Text style={styles.name} numberOfLines={1}>
-          {expense.categoryName}
+        <Text style={styles.title} numberOfLines={1}>
+          {title}
         </Text>
-        <Text style={styles.sub} numberOfLines={1}>
-          {expense.note?.trim() ? expense.note : expense.date}
-        </Text>
-      </View>
-      <View style={styles.right}>
-        <Text style={styles.amount}>−{formatPkr(expense.amountMinor)}</Text>
-        <View style={styles.sourcePill}>
-          <Text style={styles.source}>{expense.source.replace('_', ' ')}</Text>
+        <View style={styles.tagRow}>
+          <Text style={styles.dateText}>{expense.date}</Text>
+          <View style={[styles.catBadge, { backgroundColor: visual.bgColor }]}>
+            <Text style={[styles.catBadgeText, { color: visual.color }]}>
+              {expense.categoryName}
+            </Text>
+          </View>
         </View>
+      </View>
+
+      <View style={styles.right}>
+        <Text style={styles.amount}>-{formatPkr(expense.amountMinor)}</Text>
+        {onEdit || onDelete ? (
+          <View style={styles.actions}>
+            {onEdit ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Edit expense"
+                onPress={() => onEdit(expense)}
+                hitSlop={6}
+                style={({ pressed }) => [styles.actionBtn, pressed ? styles.pressed : null]}
+              >
+                <Ionicons name="create-outline" size={15} color={colors.textSecondary} />
+              </Pressable>
+            ) : null}
+            {onDelete ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Delete expense"
+                onPress={() => onDelete(expense)}
+                hitSlop={6}
+                style={({ pressed }) => [
+                  styles.actionBtn,
+                  styles.deleteBtn,
+                  pressed ? styles.pressed : null,
+                ]}
+              >
+                <Ionicons name="trash-outline" size={15} color={colors.danger} />
+              </Pressable>
+            ) : null}
+          </View>
+        ) : null}
       </View>
     </View>
   );
 }
 
 const useStyles = makeStyles((colors) => ({
-  row: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: radii.card,
-    paddingVertical: spacing.sm + 4,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.sm + 2,
+    padding: spacing.md,
+    marginBottom: 10,
     ...shadows.soft,
   },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    marginRight: 12,
   },
   meta: {
     flex: 1,
   },
-  name: {
-    ...typography.subtitle,
-    fontSize: 15,
+  title: {
+    ...typography.labelLg,
     color: colors.text,
   },
-  sub: {
-    ...typography.caption,
+  tagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  dateText: {
+    fontSize: 11,
+    fontWeight: '600',
     color: colors.textSecondary,
-    marginTop: 2,
+  },
+  catBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  catBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   right: {
     alignItems: 'flex-end',
@@ -85,20 +138,29 @@ const useStyles = makeStyles((colors) => ({
   },
   amount: {
     ...typography.subtitle,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  sourcePill: {
-    marginTop: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surfaceMuted,
-  },
-  source: {
-    fontSize: 10,
     fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'capitalize',
+    color: colors.danger,
+    ...tabular,
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 6,
+  },
+  actionBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteBtn: {
+    backgroundColor: colors.dangerSoft,
+  },
+  pressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.94 }],
   },
 }));

@@ -14,6 +14,13 @@ type ServerGroup = {
  */
 export async function flushPendingGroupSync(): Promise<void> {
   const remote = await apiRequest<{ groups: ServerGroup[] }>('/groups');
+  const remoteIds = new Set(remote.groups.map((g) => g.id));
+  const existingLocal = await groupsRepo.listLocalGroups();
+  for (const local of existingLocal) {
+    if (local.serverId && !remoteIds.has(local.serverId)) {
+      await groupsRepo.deleteLocalGroupById(local.id);
+    }
+  }
   for (const group of remote.groups) {
     await groupsRepo.upsertLocalGroup({
       name: group.name,

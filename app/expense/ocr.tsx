@@ -127,12 +127,6 @@ export default function OcrCaptureScreen() {
             onPress={() => void openGallery()}
             style={styles.gap}
           />
-          <Button
-            label={t('common.back')}
-            variant="ghost"
-            onPress={() => router.back()}
-            style={styles.gap}
-          />
         </View>
       )}
     </Screen>

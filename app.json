@@ -2,7 +2,7 @@
   "expo": {
     "name": "HisabKitab",
     "slug": "hisabkitab",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "hisabkitab",
@@ -20,7 +20,8 @@
     },
     "android": {
       "package": "com.hisabkitab.app",
-      "versionCode": 3,
+      "versionCode": 4,
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -63,7 +64,7 @@
         "expo-sqlite",
         {
           "enableFTS": false,
-          "useSQLCipher": true
+          "useSQLCipher": false
         }
       ],
       "expo-secure-store",

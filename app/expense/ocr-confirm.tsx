@@ -114,13 +114,6 @@ export default function OcrConfirmScreen() {
 
   return (
     <Screen title={t('ocr.confirmTitle')} scroll>
-      <View style={styles.badgeRow}>
-        <Text style={styles.badge}>{t(`ocr.format.${draft.format}`)}</Text>
-        <Text style={styles.badge}>{t(`ocr.confidence.${draft.confidence}`)}</Text>
-        {auto.autoName ? (
-          <Text style={styles.badge}>{t('ocr.autoCategory', { category: auto.autoName })}</Text>
-        ) : null}
-      </View>
       <Text style={styles.hint}>{t('ocr.confirmHint')}</Text>
 
       <Controller

@@ -9,7 +9,7 @@ import type { Category } from '../db/types';
 import { useResponsive } from '../hooks/useResponsive';
 import { PressableScale } from './ui/PressableScale';
 
-const GAP = spacing.sm + 4;
+const GAP = spacing.sm + 2;
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -45,14 +45,17 @@ export function CategoryGrid({ categories, onSelect, selectedId, onAdd }: Catego
               styles.item,
               { width: itemWidth },
               selected
-                ? { borderColor: visual.color, backgroundColor: withAlpha(visual.color, 0.08) }
+                ? { borderColor: visual.color, backgroundColor: withAlpha(visual.color, 0.14) }
                 : null,
             ]}
           >
-            <View style={[styles.iconWrap, { backgroundColor: withAlpha(visual.color, 0.14) }]}>
+            <View style={[styles.iconWrap, { backgroundColor: visual.bgColor }]}>
               <Ionicons name={visual.icon as IconName} size={22} color={visual.color} />
             </View>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text
+              style={[styles.name, selected ? { color: visual.color, fontWeight: '700' } : null]}
+              numberOfLines={1}
+            >
               {category.name}
             </Text>
           </PressableScale>
@@ -66,7 +69,7 @@ export function CategoryGrid({ categories, onSelect, selectedId, onAdd }: Catego
           style={[styles.item, styles.addItem, { width: itemWidth }]}
         >
           <View style={[styles.iconWrap, styles.addIconWrap]}>
-            <Ionicons name="add" size={24} color={colors.primary} />
+            <Ionicons name="add" size={24} color={colors.primaryDark} />
           </View>
           <Text style={styles.addLabel} numberOfLines={1}>
             {t('settings.addCategory')}
@@ -94,29 +97,28 @@ const useStyles = makeStyles((colors) => ({
     ...shadows.soft,
   },
   iconWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   name: {
-    ...typography.caption,
+    ...typography.labelMd,
     color: colors.text,
-    fontWeight: '700',
   },
   addItem: {
     borderStyle: 'dashed',
     borderColor: colors.primary,
     backgroundColor: 'transparent',
-    boxShadow: 'none',
+    ...shadows.none,
   },
   addIconWrap: {
     backgroundColor: colors.primaryMuted,
   },
   addLabel: {
-    ...typography.caption,
+    ...typography.labelMd,
     color: colors.primaryDark,
     fontWeight: '700',
   },

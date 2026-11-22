@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '../../src/components/ui/Button';
@@ -33,7 +33,6 @@ export default function GroupDetailScreen() {
   const styles = useStyles();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useTranslation();
-  const router = useRouter();
   const user = useAuthStore((s) => s.user);
 
   const [tab, setTab] = useState<Tab>('overview');
@@ -230,10 +229,6 @@ export default function GroupDetailScreen() {
 
   return (
     <Screen title={groupName || t('groups.detail')}>
-      <Pressable onPress={() => router.back()} style={styles.backRow}>
-        <Text style={styles.back}>{t('common.back')}</Text>
-      </Pressable>
-
       <Text style={styles.meta}>
         {t('groups.inviteLabel')}: {inviteCode}
       </Text>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, Pressable, Text, TextInput, View, type TextInputProps, type TextStyle } from 'react-native';
 
 import { radii, spacing, typography } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
@@ -17,11 +17,14 @@ export function TextField({
   style,
   secureTextEntry,
   showVisibilityToggle,
+  onFocus,
+  onBlur,
   ...rest
 }: TextFieldProps) {
   const { colors } = useTheme();
   const styles = useStyles();
   const [visible, setVisible] = useState(false);
+  const [focused, setFocused] = useState(false);
   const isSecure = Boolean(secureTextEntry) && !visible;
   const toggle = Boolean(showVisibilityToggle && secureTextEntry);
 
@@ -30,15 +33,24 @@ export function TextField({
       <Text style={styles.label}>{label}</Text>
       <View style={styles.row}>
         <TextInput
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor={colors.textMuted}
           style={[
             styles.input,
             toggle ? styles.inputWithToggle : null,
+            focused ? styles.inputFocused : null,
             error ? styles.inputError : null,
             style,
           ]}
           accessibilityLabel={label}
           secureTextEntry={isSecure}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
           {...rest}
         />
         {toggle ? (
@@ -67,10 +79,9 @@ const useStyles = makeStyles((colors) => ({
     marginBottom: spacing.md,
   },
   label: {
-    ...typography.caption,
+    ...typography.labelMd,
     color: colors.textSecondary,
     marginBottom: spacing.xs,
-    fontWeight: '600',
   },
   row: {
     position: 'relative',
@@ -80,11 +91,16 @@ const useStyles = makeStyles((colors) => ({
     minHeight: 48,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    borderRadius: radii.input,
     paddingHorizontal: spacing.md,
     color: colors.text,
     ...typography.body,
+    ...(Platform.OS === 'web' ? ({ outlineStyle: 'none' } as unknown as TextStyle) : null),
+  },
+  inputFocused: {
+    borderColor: colors.primary,
+    borderWidth: 1.5,
   },
   inputWithToggle: {
     paddingRight: 64,
@@ -99,7 +115,7 @@ const useStyles = makeStyles((colors) => ({
     justifyContent: 'center',
   },
   toggleText: {
-    ...typography.caption,
+    ...typography.labelMd,
     color: colors.primary,
     fontWeight: '700',
   },

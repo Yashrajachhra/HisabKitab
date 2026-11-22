@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, Text, type ViewStyle } from 'react-native
 import { radii, shadows, spacing, typography } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+type ButtonVariant = 'primary' | 'accent' | 'secondary' | 'ghost' | 'danger';
 
 type ButtonProps = {
   label: string;
@@ -28,7 +28,7 @@ export function Button({
   const styles = useStyles();
   const isDisabled = disabled || loading;
   const spinnerColor =
-    variant === 'primary' ? colors.onPrimary : variant === 'danger' ? colors.text : colors.primary;
+    variant === 'ghost' ? colors.primary : variant === 'secondary' ? colors.onNavy : colors.onPrimary;
 
   return (
     <Pressable
@@ -57,9 +57,9 @@ export function Button({
 
 const useStyles = makeStyles((colors) => ({
   base: {
-    minHeight: 52,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.lg,
+    minHeight: 54,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -67,35 +67,45 @@ const useStyles = makeStyles((colors) => ({
     backgroundColor: colors.primary,
     ...shadows.raised,
   },
+  accent: {
+    backgroundColor: colors.primary,
+    ...shadows.raised,
+  },
   secondary: {
-    backgroundColor: colors.primaryMuted,
+    minHeight: 48,
+    backgroundColor: colors.navy,
   },
   ghost: {
+    minHeight: 48,
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: colors.border,
+    borderColor: colors.primary,
   },
   danger: {
+    minHeight: 48,
     backgroundColor: colors.danger,
   },
   pressed: {
     opacity: 0.92,
-    transform: [{ scale: 0.97 }],
+    transform: [{ scale: 0.98 }],
   },
   disabled: {
     opacity: 0.5,
   },
   label: {
-    ...typography.subtitle,
+    ...typography.labelLg,
   },
   primaryLabel: {
     color: colors.onPrimary,
   },
+  accentLabel: {
+    color: colors.onPrimary,
+  },
   secondaryLabel: {
-    color: colors.text,
+    color: colors.onNavy,
   },
   ghostLabel: {
-    color: colors.text,
+    color: colors.primary,
   },
   dangerLabel: {
     color: colors.onPrimary,

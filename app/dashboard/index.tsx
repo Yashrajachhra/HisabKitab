@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,6 @@ import { formatPkr, parseAmountInput, toMajorUnits } from '../../src/utils/money
 export default function DashboardScreen() {
   const styles = useStyles();
   const { t } = useTranslation();
-  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [categoryLimitMajor, setCategoryLimitMajor] = useState('');
@@ -78,11 +77,6 @@ export default function DashboardScreen() {
     <Screen
       title={t('dashboard.title')}
       loading={isLoading && !budget && categorySpend.length === 0}
-      headerRight={
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.backText}>{t('common.back')}</Text>
-        </Pressable>
-      }
     >
       <Text style={styles.month}>{formatMonthLabel(month)}</Text>
 
@@ -137,7 +131,7 @@ export default function DashboardScreen() {
           />
           <View style={styles.editorActions}>
             <Button
-              label={t('common.back')}
+              label={t('common.cancel')}
               variant="ghost"
               onPress={() => setEditing(false)}
               style={styles.flex}
@@ -151,7 +145,6 @@ export default function DashboardScreen() {
               style={styles.flex}
             />
           </View>
-          <Text style={styles.privacyNote}>{t('dashboard.notifPrivacy')}</Text>
         </View>
       ) : null}
 

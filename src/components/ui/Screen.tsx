@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, Text, View, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View, type ViewStyle } from 'react-native';
+import { usePathname, useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { spacing, typography } from '../../config/theme';
+import { radii, shadows, spacing, typography } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
 import { MAX_CONTENT_WIDTH, useResponsive } from '../../hooks/useResponsive';
 import { LanguageToggle, ThemeToggle } from './HeaderToggles';
@@ -17,6 +20,7 @@ type ScreenProps = {
   headerRight?: ReactNode;
   headerLeft?: ReactNode;
   showLanguageToggle?: boolean;
+  onBack?: () => void;
 };
 
 export function Screen({
@@ -28,13 +32,31 @@ export function Screen({
   headerRight,
   headerLeft,
   showLanguageToggle = false,
+  onBack,
 }: ScreenProps) {
   const { colors } = useTheme();
   const styles = useStyles();
+  const { t } = useTranslation();
+  const router = useRouter();
+  const pathname = usePathname();
   const { gutter, scale } = useResponsive();
   const navVisible = useBottomNavVisible();
   const frame = { paddingHorizontal: gutter };
   const navSpace = navVisible ? { paddingBottom: BOTTOM_NAV_SPACE } : null;
+
+  const showBack = Boolean(onBack) || (pathname !== '/' && pathname !== '/onboarding');
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
 
   const body = loading ? (
     <View style={styles.loading}>
@@ -47,6 +69,17 @@ export function Screen({
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={[styles.header, styles.frame, frame]}>
+        {showBack ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('common.back')}
+            onPress={handleBack}
+            hitSlop={8}
+            style={({ pressed }) => [styles.backBtn, pressed ? styles.pressed : null]}
+          >
+            <Ionicons name="arrow-back" size={20} color={colors.text} />
+          </Pressable>
+        ) : null}
         {headerLeft}
         <Text
           style={[styles.title, { fontSize: scale(typography.title.fontSize) }]}
@@ -92,6 +125,21 @@ const useStyles = makeStyles((colors) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.soft,
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
   },
   title: {
     ...typography.title,

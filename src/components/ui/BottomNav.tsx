@@ -25,16 +25,16 @@ type NavItem = {
 const TABS: NavItem[] = [
   { key: 'home', path: '/', labelKey: 'nav.home', fallback: 'Home', icon: 'home-outline', iconActive: 'home' },
   { key: 'groups', path: '/groups', labelKey: 'nav.groups', fallback: 'Groups', icon: 'people-outline', iconActive: 'people' },
-  { key: 'insights', path: '/dashboard', labelKey: 'nav.insights', fallback: 'Insights', icon: 'pie-chart-outline', iconActive: 'pie-chart' },
-  { key: 'profile', path: '/settings', labelKey: 'nav.profile', fallback: 'Profile', icon: 'person-circle-outline', iconActive: 'person-circle' },
+  { key: 'insights', path: '/dashboard', labelKey: 'nav.insights', fallback: 'Insights', icon: 'trending-up-outline', iconActive: 'trending-up' },
+  { key: 'profile', path: '/settings', labelKey: 'nav.profile', fallback: 'Profile', icon: 'person-outline', iconActive: 'person' },
 ];
 
 const SCAN_PATH = '/expense/ocr';
-const BAR_HEIGHT = 66;
-const SCAN_SIZE = 62;
+const BAR_HEIGHT = 64;
+const SCAN_SIZE = 56;
 
-/** Vertical space screens reserve so content isn't hidden behind the bar. */
-export const BOTTOM_NAV_SPACE = BAR_HEIGHT + spacing.xl + spacing.sm;
+/** Vertical space screens reserve so content isn't hidden behind the docked bar. */
+export const BOTTOM_NAV_SPACE = 100;
 
 export function useBottomNavVisible(): boolean {
   const pathname = usePathname();
@@ -76,13 +76,11 @@ export function BottomNav() {
         hitSlop={6}
         style={styles.tab}
       >
-        <View style={[styles.iconPill, active ? styles.iconPillActive : null]}>
-          <Ionicons
-            name={active ? tab.iconActive : tab.icon}
-            size={22}
-            color={active ? colors.primary : colors.textSecondary}
-          />
-        </View>
+        <Ionicons
+          name={active ? tab.iconActive : tab.icon}
+          size={22}
+          color={active ? colors.primaryDark : colors.textSecondary}
+        />
         <Text style={[styles.label, active ? styles.labelActive : null]} numberOfLines={1}>
           {label}
         </Text>
@@ -94,7 +92,7 @@ export function BottomNav() {
 
   return (
     <View
-      style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, spacing.sm) + spacing.xs }]}
+      style={[styles.dock, { paddingBottom: Math.max(insets.bottom, spacing.xs) }]}
       pointerEvents="box-none"
     >
       <View style={styles.bar} accessibilityRole="tablist">
@@ -105,12 +103,12 @@ export function BottomNav() {
             accessibilityRole="button"
             accessibilityLabel={scanLabel}
             onPress={() => router.push(SCAN_PATH as Href)}
-            scaleTo={0.92}
+            scaleTo={0.93}
             style={styles.scanBtn}
           >
-            <Ionicons name="scan" size={28} color={colors.onPrimary} />
+            <Ionicons name="scan" size={26} color={colors.onPrimary} />
           </PressableScale>
-          <Text style={[styles.label, styles.scanLabel]} numberOfLines={1}>
+          <Text style={styles.scanLabel} numberOfLines={1}>
             {scanLabel}
           </Text>
         </View>
@@ -122,72 +120,64 @@ export function BottomNav() {
 }
 
 const useStyles = makeStyles((colors) => ({
-  wrap: {
+  dock: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: spacing.md,
-    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    ...shadows.nav,
   },
   bar: {
     width: '100%',
     maxWidth: MAX_CONTENT_WIDTH,
+    alignSelf: 'center',
     height: BAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl,
     paddingHorizontal: spacing.xs,
-    ...shadows.nav,
   },
   tab: {
     flex: 1,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 2,
   },
-  iconPill: {
-    width: 44,
-    height: 30,
-    borderRadius: radii.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconPillActive: {
-    backgroundColor: colors.primaryMuted,
-  },
   label: {
     fontSize: 11,
     fontWeight: '600',
+    letterSpacing: 0.3,
     color: colors.textSecondary,
   },
   labelActive: {
-    color: colors.text,
-    fontWeight: '800',
+    color: colors.primaryDark,
+    fontWeight: '700',
   },
   scanSlot: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: '100%',
-    paddingBottom: 8,
+    paddingBottom: 6,
   },
   scanBtn: {
     position: 'absolute',
-    top: -SCAN_SIZE / 2 + 2,
+    top: -22,
     width: SCAN_SIZE,
     height: SCAN_SIZE,
-    borderRadius: SCAN_SIZE / 2,
+    borderRadius: radii.pill,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    borderColor: colors.background,
     ...shadows.raised,
   },
   scanLabel: {
-    color: colors.text,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    color: colors.textSecondary,
   },
 }));

@@ -51,8 +51,8 @@
     "displayNameTooShort": "Display name must be at least 2 characters.",
     "emailInvalid": "Enter a valid email address.",
     "passwordTooShort": "Password must be at least 8 characters.",
-    "serverUnreachableLocal": "Sign in needs the HisabKitab cloud API. This install still points at localhost, which does not work on a phone. Personal expenses work without signing in.",
-    "serverUnreachable": "Cannot reach the HisabKitab server ({{url}}). Check your internet connection, or set the API URL in Settings."
+    "serverUnreachableLocal": "Cannot connect right now. Personal expenses still work offline.",
+    "serverUnreachable": "Cannot connect right now. Please check your internet connection and try again."
   },
   "groups": {
     "title": "Groups",
@@ -94,7 +94,7 @@
   },
   "ocr": {
     "title": "Snap & Log",
-    "privacy": "Receipts are read on this device with ML Kit. Images are never uploaded. We delete the photo after parsing unless you choose to keep it.",
+    "privacy": "Receipts are scanned directly on your phone. Images are never uploaded.",
     "camera": "Take photo",
     "gallery": "Choose from gallery",
     "reading": "Reading receipt on device…",
@@ -133,7 +133,7 @@
     }
   },
   "dashboard": {
-    "title": "Budget",
+    "title": "Insights",
     "monthlyBudget": "Monthly budget",
     "progress": "Spent this month",
     "set": "Set limit",
@@ -197,7 +197,7 @@
     "useTranscript": "Continue",
     "confirmTitle": "Confirm voice entry",
     "heard": "Heard",
-    "confirmHint": "Edit anything that looks wrong, then save. Source will be marked as voice.",
+    "confirmHint": "Review the details below and tap save.",
     "save": "Save expense",
     "discard": "Discard",
     "micDeniedTitle": "Microphone not available",
@@ -253,7 +253,7 @@
     "logout": "Log out",
     "deleteAccount": "Delete account session",
     "deleteAccountTitle": "Remove account session?",
-    "deleteAccountBody": "Clears local login tokens. Server account deletion can be requested from support once the API is live.",
+    "deleteAccountBody": "Signs out and clears your login session from this device.",
     "groups": "Hostel groups",
     "danger": "Danger zone",
     "deleteData": "Delete all local data",

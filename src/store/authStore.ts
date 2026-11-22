@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import * as groupsRepo from '../db/repositories/groupsRepo';
 import { apiRequest, clearTokens, saveTokens, getAccessToken } from '../services/api/client';
 import { getSecureItem, setSecureItem, deleteSecureItem } from '../utils/secureStorage';
 
@@ -45,6 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken: string;
       refreshToken: string;
     }>('/auth/register', { method: 'POST', body: input, auth: false });
+    await groupsRepo.clearLocalGroupsCache().catch(() => undefined);
     await saveTokens(data.accessToken, data.refreshToken);
     await setSecureItem(USER_KEY, JSON.stringify(data.user));
     set({ user: data.user });
@@ -56,6 +58,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken: string;
       refreshToken: string;
     }>('/auth/login', { method: 'POST', body: input, auth: false });
+    await groupsRepo.clearLocalGroupsCache().catch(() => undefined);
     await saveTokens(data.accessToken, data.refreshToken);
     await setSecureItem(USER_KEY, JSON.stringify(data.user));
     set({ user: data.user });
@@ -64,6 +67,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     await clearTokens();
     await deleteSecureItem(USER_KEY);
+    await groupsRepo.clearLocalGroupsCache().catch(() => undefined);
     set({ user: null });
   },
 }));

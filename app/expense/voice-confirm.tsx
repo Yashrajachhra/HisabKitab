@@ -91,9 +91,6 @@ export default function VoiceConfirmScreen() {
 
   return (
     <Screen title={t('voice.confirmTitle')} scroll>
-      <View style={styles.badgeRow}>
-        <Text style={styles.badge}>{t(`voice.confidence.${draft.confidence}`)}</Text>
-      </View>
       <Text style={styles.transcriptLabel}>{t('voice.heard')}</Text>
       <Text style={styles.transcript}>{draft.transcript}</Text>
       <Text style={styles.hint}>{t('voice.confirmHint')}</Text>

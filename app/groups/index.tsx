@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Text, View } from 'react-native';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 
@@ -63,6 +63,10 @@ export default function GroupsScreen() {
         }
       } catch {
         members = [];
+      }
+
+      if (members.length > 0 && !members.some((m) => m.userId === user.id)) {
+        continue;
       }
 
       let totalSpentMinor = 0;
@@ -139,15 +143,7 @@ export default function GroupsScreen() {
   const displayName = user?.displayName?.split(' ')[0] ?? 'there';
 
   return (
-    <Screen
-      headerLeft={<HkLogo size={36} />}
-      title=""
-      headerRight={
-        <Pressable onPress={() => router.back()} accessibilityRole="button">
-          <Text style={styles.backLink}>{t('common.back')}</Text>
-        </Pressable>
-      }
-    >
+    <Screen headerLeft={<HkLogo size={36} />} title="">
       <Text style={styles.welcome}>{t('groups.welcome', { name: displayName })}</Text>
       <Text style={styles.manage}>{t('groups.manage')}</Text>
 

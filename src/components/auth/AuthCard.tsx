@@ -8,7 +8,7 @@ import { Button } from '../ui/Button';
 import { TextField } from '../ui/TextField';
 import { radii, spacing, typography } from '../../config/theme';
 import { makeStyles } from '../../theme/ThemeProvider';
-import { getApiBaseUrl, isLocalApiUrl } from '../../services/api/client';
+import { isLocalApiUrl } from '../../services/api/client';
 import { useAuthStore } from '../../store/authStore';
 
 type AuthTab = 'signin' | 'signup';
@@ -70,7 +70,7 @@ export function AuthCard({ initialTab = 'signin' }: AuthCardProps) {
     } catch (err) {
       const raw = err instanceof Error ? err.message : t('common.error');
       if (/CLEARTEXT|UnknownServiceException|Network request failed|Failed to fetch|ECONNREFUSED/i.test(raw)) {
-        setError(t('auth.serverUnreachable', { url: getApiBaseUrl() }));
+        setError(t('auth.serverUnreachable'));
       } else {
         setError(raw);
       }
@@ -144,13 +144,6 @@ export function AuthCard({ initialTab = 'signin' }: AuthCardProps) {
       />
 
       <Text style={styles.legal}>{t('auth.legal')}</Text>
-
-      <Button
-        label={t('common.back')}
-        variant="ghost"
-        style={styles.back}
-        onPress={() => router.back()}
-      />
     </View>
   );
 }

@@ -85,6 +85,20 @@ export async function listLocalGroups(): Promise<LocalGroupRow[]> {
   }));
 }
 
+export async function clearLocalGroupsCache(): Promise<void> {
+  const db = await getDatabase();
+  await db.execAsync(`
+    DELETE FROM group_expenses;
+    DELETE FROM settlements;
+    DELETE FROM groups;
+  `);
+}
+
+export async function deleteLocalGroupById(id: string): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(`DELETE FROM groups WHERE id = ?`, id);
+}
+
 export async function countActiveGroups(): Promise<number> {
   const db = await getDatabase();
   const row = await db.getFirstAsync<{ count: number }>(`SELECT COUNT(*) as count FROM groups`);

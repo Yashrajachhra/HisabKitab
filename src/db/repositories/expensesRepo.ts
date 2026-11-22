@@ -133,6 +133,27 @@ export async function getExpenseById(id: string): Promise<ExpenseWithCategory | 
   return row ? mapJoined(row) : null;
 }
 
+export type UpdateExpenseInput = {
+  amountMinor: number;
+  categoryId: string;
+  note?: string | null;
+  date: string;
+};
+
+export async function updateExpense(id: string, input: UpdateExpenseInput): Promise<void> {
+  const db = await getDatabase();
+  const now = new Date().toISOString();
+  await db.runAsync(
+    `UPDATE expenses SET amount_minor = ?, category_id = ?, note = ?, date = ?, updated_at = ? WHERE id = ?`,
+    input.amountMinor,
+    input.categoryId,
+    input.note ?? null,
+    input.date,
+    now,
+    id,
+  );
+}
+
 export async function deleteExpense(id: string): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(`DELETE FROM expenses WHERE id = ?`, id);

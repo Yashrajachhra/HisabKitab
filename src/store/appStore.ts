@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type { Category, ExpenseWithCategory } from '../db/types';
 import * as categoriesRepo from '../db/repositories/categoriesRepo';
 import * as expensesRepo from '../db/repositories/expensesRepo';
-import type { CreateExpenseInput } from '../db/repositories/expensesRepo';
+import type { CreateExpenseInput, UpdateExpenseInput } from '../db/repositories/expensesRepo';
 import { useBudgetStore } from './budgetStore';
 
 type AppState = {
@@ -18,6 +18,7 @@ type AppState = {
   refreshCategories: () => Promise<void>;
   addCategory: (input: { name: string; isQuickTap?: boolean }) => Promise<Category>;
   addExpense: (input: CreateExpenseInput) => Promise<void>;
+  updateExpense: (id: string, input: UpdateExpenseInput) => Promise<void>;
   removeExpense: (id: string) => Promise<void>;
   clearError: () => void;
 };
@@ -110,10 +111,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     void useBudgetStore.getState().checkAlertsAfterSpend();
   },
 
+  updateExpense: async (id, input) => {
+    try {
+      await expensesRepo.updateExpense(id, input);
+      await get().refreshExpenses();
+      void useBudgetStore.getState().loadMonth();
+    } catch {
+      set({ error: 'Could not update expense.' });
+    }
+  },
+
   removeExpense: async (id) => {
     try {
       await expensesRepo.deleteExpense(id);
       await get().refreshExpenses();
+      void useBudgetStore.getState().loadMonth();
     } catch {
       set({ error: 'Could not delete expense.' });
     }

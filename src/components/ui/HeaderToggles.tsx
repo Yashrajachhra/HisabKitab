@@ -3,7 +3,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 
 import { setAppLanguage } from '../../i18n';
-import { shadows } from '../../config/theme';
+import { radii, shadows } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
 
 const BTN = 36;
@@ -76,7 +76,7 @@ export function SettingsButton({ onPress, accessibilityLabel }: SettingsButtonPr
       hitSlop={8}
       style={({ pressed }) => [styles.iconBtn, pressed ? styles.pressed : null]}
     >
-      <SettingsGlyph color={colors.primary} size={16} />
+      <SettingsGlyph color={colors.text} size={16} />
     </Pressable>
   );
 }
@@ -97,9 +97,9 @@ export function ThemeToggle() {
       style={({ pressed }) => [styles.iconBtn, pressed ? styles.pressed : null]}
     >
       {isDark ? (
-        <MoonIcon color={colors.primary} size={16} />
+        <MoonIcon color={colors.text} size={16} />
       ) : (
-        <SunIcon color={colors.warning} size={16} />
+        <SunIcon color={colors.text} size={16} />
       )}
     </Pressable>
   );
@@ -119,21 +119,23 @@ export function LanguageToggle() {
       hitSlop={8}
       style={({ pressed }) => [styles.langBtn, pressed ? styles.pressed : null]}
     >
-      <GlobeIcon color={colors.primary} size={13} />
-      <Text style={[styles.langCode, { color: colors.primary }]}>{isUrdu ? 'UR' : 'EN'}</Text>
+      <GlobeIcon color={colors.text} size={13} />
+      <Text style={styles.langCode}>{isUrdu ? 'UR' : 'EN'}</Text>
     </Pressable>
   );
 }
 
 const useStyles = makeStyles((colors) => ({
   pressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.94 }],
+    opacity: 0.85,
+    transform: [{ scale: 0.96 }],
   },
   iconBtn: {
     width: BTN,
     height: BTN,
-    borderRadius: BTN / 2,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -143,7 +145,9 @@ const useStyles = makeStyles((colors) => ({
     height: BTN,
     minWidth: BTN,
     paddingHorizontal: 10,
-    borderRadius: BTN / 2,
+    borderRadius: radii.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
     backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
@@ -153,7 +157,8 @@ const useStyles = makeStyles((colors) => ({
   },
   langCode: {
     fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    color: colors.text,
   },
 }));
