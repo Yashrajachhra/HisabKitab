@@ -1,12 +1,17 @@
-import { Pressable, Text, View } from 'react-native';
+import type { ComponentProps } from 'react';
+import { Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
-import { radii, spacing, typography } from '../config/theme';
+import { categoryVisual, radii, shadows, spacing, typography, withAlpha } from '../config/theme';
 import { makeStyles, useTheme } from '../theme/ThemeProvider';
 import type { Category } from '../db/types';
 import { useResponsive } from '../hooks/useResponsive';
+import { PressableScale } from './ui/PressableScale';
 
-const GAP = spacing.sm;
+const GAP = spacing.sm + 4;
+
+type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type CategoryGridProps = {
   categories: Category[];
@@ -15,24 +20,6 @@ type CategoryGridProps = {
   /** Shows a dashed “+ Add” tile so users aren’t stuck with the seed list. */
   onAdd?: () => void;
 };
-
-const ICON_GLYPH: Record<string, string> = {
-  cup: 'C',
-  food: 'F',
-  bus: 'T',
-  print: 'P',
-  home: 'H',
-  phone: 'M',
-  pen: 'S',
-};
-
-function categoryGlyph(category: Category): string {
-  const mapped = ICON_GLYPH[category.icon];
-  if (mapped) return mapped;
-  // Custom / “dots” / single-letter icons → first letter of the name
-  const initial = category.name.trim().charAt(0).toUpperCase();
-  return initial || '•';
-}
 
 export function CategoryGrid({ categories, onSelect, selectedId, onAdd }: CategoryGridProps) {
   const { colors } = useTheme();
@@ -46,51 +33,45 @@ export function CategoryGrid({ categories, onSelect, selectedId, onAdd }: Catego
     <View style={styles.grid} accessibilityRole="summary">
       {categories.map((category) => {
         const selected = category.id === selectedId;
+        const visual = categoryVisual(category);
         return (
-          <Pressable
+          <PressableScale
             key={category.id}
             accessibilityRole="button"
             accessibilityLabel={category.name}
             accessibilityState={{ selected }}
             onPress={() => onSelect(category)}
-            style={({ pressed }) => [
+            style={[
               styles.item,
               { width: itemWidth },
-              { borderColor: selected ? category.color : colors.border },
-              selected ? { backgroundColor: `${category.color}18` } : null,
-              pressed ? styles.pressed : null,
+              selected
+                ? { borderColor: visual.color, backgroundColor: withAlpha(visual.color, 0.08) }
+                : null,
             ]}
           >
-            <View style={[styles.iconWrap, { backgroundColor: `${category.color}22` }]}>
-              <Text style={[styles.icon, { color: category.color }]}>
-                {categoryGlyph(category)}
-              </Text>
+            <View style={[styles.iconWrap, { backgroundColor: withAlpha(visual.color, 0.14) }]}>
+              <Ionicons name={visual.icon as IconName} size={22} color={visual.color} />
             </View>
             <Text style={styles.name} numberOfLines={1}>
               {category.name}
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
       {onAdd ? (
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t('settings.addCategory')}
           onPress={onAdd}
-          style={({ pressed }) => [
-            styles.item,
-            styles.addItem,
-            { width: itemWidth },
-            pressed ? styles.pressed : null,
-          ]}
+          style={[styles.item, styles.addItem, { width: itemWidth }]}
         >
           <View style={[styles.iconWrap, styles.addIconWrap]}>
-            <Text style={styles.addIcon}>+</Text>
+            <Ionicons name="add" size={24} color={colors.primary} />
           </View>
           <Text style={styles.addLabel} numberOfLines={1}>
             {t('settings.addCategory')}
           </Text>
-        </Pressable>
+        </PressableScale>
       ) : null}
     </View>
   );
@@ -104,49 +85,39 @@ const useStyles = makeStyles((colors) => ({
   },
   item: {
     backgroundColor: colors.surface,
-    borderRadius: radii.md,
+    borderRadius: radii.card,
     borderWidth: 1.5,
+    borderColor: 'transparent',
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.sm,
     alignItems: 'center',
-  },
-  pressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
+    ...shadows.soft,
   },
   iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  icon: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
   name: {
     ...typography.caption,
     color: colors.text,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   addItem: {
     borderStyle: 'dashed',
-    borderColor: colors.border,
+    borderColor: colors.primary,
     backgroundColor: 'transparent',
+    boxShadow: 'none',
   },
   addIconWrap: {
     backgroundColor: colors.primaryMuted,
   },
-  addIcon: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.primary,
-  },
   addLabel: {
     ...typography.caption,
-    color: colors.primary,
+    color: colors.primaryDark,
     fontWeight: '700',
   },
 }));

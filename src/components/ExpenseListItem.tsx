@@ -1,9 +1,13 @@
+import type { ComponentProps } from 'react';
 import { Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { radii, spacing, typography } from '../config/theme';
+import { categoryVisual, radii, shadows, spacing, typography, withAlpha } from '../config/theme';
 import { makeStyles } from '../theme/ThemeProvider';
 import type { ExpenseWithCategory } from '../db/types';
 import { formatPkr } from '../utils/money';
+
+type IconName = ComponentProps<typeof Ionicons>['name'];
 
 type ExpenseListItemProps = {
   expense: ExpenseWithCategory;
@@ -11,22 +15,33 @@ type ExpenseListItemProps = {
 
 export function ExpenseListItem({ expense }: ExpenseListItemProps) {
   const styles = useStyles();
+  const visual = categoryVisual({
+    name: expense.categoryName,
+    icon: expense.categoryIcon,
+    color: expense.categoryColor,
+  });
   return (
     <View
       style={styles.row}
       accessible
       accessibilityLabel={`${expense.categoryName}, ${formatPkr(expense.amountMinor)}, ${expense.date}`}
     >
-      <View style={[styles.dot, { backgroundColor: expense.categoryColor }]} />
+      <View style={[styles.iconWrap, { backgroundColor: withAlpha(visual.color, 0.14) }]}>
+        <Ionicons name={visual.icon as IconName} size={20} color={visual.color} />
+      </View>
       <View style={styles.meta}>
-        <Text style={styles.name}>{expense.categoryName}</Text>
+        <Text style={styles.name} numberOfLines={1}>
+          {expense.categoryName}
+        </Text>
         <Text style={styles.sub} numberOfLines={1}>
           {expense.note?.trim() ? expense.note : expense.date}
         </Text>
       </View>
       <View style={styles.right}>
-        <Text style={styles.amount}>{formatPkr(expense.amountMinor)}</Text>
-        <Text style={styles.source}>{expense.source.replace('_', ' ')}</Text>
+        <Text style={styles.amount}>−{formatPkr(expense.amountMinor)}</Text>
+        <View style={styles.sourcePill}>
+          <Text style={styles.source}>{expense.source.replace('_', ' ')}</Text>
+        </View>
       </View>
     </View>
   );
@@ -37,16 +52,18 @@ const useStyles = makeStyles((colors) => ({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radii.card,
+    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.sm + 2,
+    ...shadows.soft,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  iconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: spacing.md,
   },
   meta: {
@@ -54,6 +71,7 @@ const useStyles = makeStyles((colors) => ({
   },
   name: {
     ...typography.subtitle,
+    fontSize: 15,
     color: colors.text,
   },
   sub: {
@@ -63,15 +81,24 @@ const useStyles = makeStyles((colors) => ({
   },
   right: {
     alignItems: 'flex-end',
+    marginLeft: spacing.sm,
   },
   amount: {
     ...typography.subtitle,
+    fontWeight: '800',
     color: colors.text,
   },
+  sourcePill: {
+    marginTop: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surfaceMuted,
+  },
   source: {
-    ...typography.caption,
+    fontSize: 10,
+    fontWeight: '700',
     color: colors.textSecondary,
     textTransform: 'capitalize',
-    marginTop: 2,
   },
 }));

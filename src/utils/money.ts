@@ -24,7 +24,7 @@ export function formatPkr(amountMinor: number, options?: { withSymbol?: boolean 
     maximumFractionDigits: 2,
   }).format(major);
 
-  return withSymbol ? `Rs ${formatted}` : formatted;
+  return withSymbol ? `Rs. ${formatted}` : formatted;
 }
 
 export function parseAmountInput(raw: string): number | null {

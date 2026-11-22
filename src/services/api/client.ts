@@ -57,7 +57,11 @@ async function refreshAccessToken(): Promise<string | null> {
 
   const res = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      // Free ngrok shows an HTML interstitial to browsers; RN clients need this.
+      'ngrok-skip-browser-warning': 'true',
+    },
     body: JSON.stringify({ refreshToken }),
   });
   if (!res.ok) {
@@ -72,6 +76,7 @@ async function refreshAccessToken(): Promise<string | null> {
 export async function apiRequest<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   };
 
   if (options.auth !== false) {

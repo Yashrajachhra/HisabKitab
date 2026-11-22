@@ -26,7 +26,11 @@
     "groups": "Groups",
     "budget": "Budget",
     "monthTotal": "This month",
-    "openDashboard": "View budget & charts"
+    "openDashboard": "View budget & charts",
+    "leftThisMonth": "{{amount}} left this month",
+    "overBy": "Over by {{amount}}",
+    "onTrackTitle": "You're on track!",
+    "onTrackBody": "Spending is within your monthly budget. Keep it up!"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -268,5 +272,12 @@
     "darkMode": "Switch to dark mode",
     "lightMode": "Switch to light mode",
     "switchLanguage": "Switch to Urdu"
+  },
+  "nav": {
+    "home": "Home",
+    "groups": "Groups",
+    "scan": "Scan",
+    "insights": "Insights",
+    "profile": "Profile"
   }
 }

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
-import { useRouter, type Href } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useTranslation } from 'react-i18next';
 
 import { AddCategoryField } from '../src/components/AddCategoryField';
@@ -8,23 +9,30 @@ import { AmountKeypad } from '../src/components/AmountKeypad';
 import { CategoryGrid } from '../src/components/CategoryGrid';
 import { ExpenseList } from '../src/components/ExpenseList';
 import { HkLogo } from '../src/components/HkLogo';
-import { SettingsButton } from '../src/components/ui/HeaderToggles';
+import { Confetti } from '../src/components/ui/Confetti';
+import { PressableScale } from '../src/components/ui/PressableScale';
+import { ProgressRing } from '../src/components/ui/ProgressRing';
 import { Screen } from '../src/components/ui/Screen';
-import { radii, spacing, typography } from '../src/config/theme';
-import { makeStyles } from '../src/theme/ThemeProvider';
+import { brand, radii, shadows, spacing, typography, withAlpha } from '../src/config/theme';
+import { makeStyles, useTheme } from '../src/theme/ThemeProvider';
 import type { Category } from '../src/db/types';
 import { useAppStore } from '../src/store/appStore';
+import { useBudgetStore } from '../src/store/budgetStore';
 import { useResponsive } from '../src/hooks/useResponsive';
 import { formatPkr } from '../src/utils/money';
 
 const ENTRY_ACTIONS = [
-  { route: '/expense/ocr', glyph: '📷', labelKey: 'home.snap', a11yKey: 'ocr.title' },
-  { route: '/expense/voice', glyph: '🎙', labelKey: 'home.voice', a11yKey: 'voice.title' },
-  { route: '/expense/manual', glyph: '✎', labelKey: 'home.manual', a11yKey: 'manual.title' },
+  { route: '/expense/ocr', icon: 'camera', tint: 'primary', labelKey: 'home.snap', a11yKey: 'ocr.title' },
+  { route: '/expense/voice', icon: 'mic', tint: 'accent', labelKey: 'home.voice', a11yKey: 'voice.title' },
+  { route: '/expense/manual', icon: 'create', tint: 'navy', labelKey: 'home.manual', a11yKey: 'manual.title' },
 ] as const;
+
+/** Confetti plays at most once per app session when the monthly budget is on track. */
+let celebratedThisSession = false;
 
 export default function HomeScreen() {
   const styles = useStyles();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const { scale } = useResponsive();
@@ -34,10 +42,20 @@ export default function HomeScreen() {
   const isLoading = useAppStore((s) => s.isLoading);
   const error = useAppStore((s) => s.error);
   const clearError = useAppStore((s) => s.clearError);
+  const progress = useBudgetStore((s) => s.progress);
+  const loadMonth = useBudgetStore((s) => s.loadMonth);
 
   const [selected, setSelected] = useState<Category | null>(null);
   const [saving, setSaving] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
+  const [confetti, setConfetti] = useState(false);
+
+  // Read-only refresh of the existing budget data so the ring stays current.
+  useFocusEffect(
+    useCallback(() => {
+      void loadMonth();
+    }, [loadMonth]),
+  );
 
   const monthTotal = useMemo(() => {
     const month = new Date().toISOString().slice(0, 7);
@@ -45,6 +63,22 @@ export default function HomeScreen() {
       .filter((e) => e.date.startsWith(month))
       .reduce((sum, e) => sum + e.amountMinor, 0);
   }, [expenses]);
+
+  const hasBudget = progress.limitMinor > 0;
+  const onTrack = hasBudget && progress.threshold === 'none' && progress.spentMinor > 0;
+  const ringColor =
+    progress.threshold === 'exceeded'
+      ? colors.danger
+      : progress.threshold === 'warning'
+        ? colors.accent
+        : colors.primary;
+
+  useEffect(() => {
+    if (!onTrack || celebratedThisSession) return;
+    celebratedThisSession = true;
+    const timer = setTimeout(() => setConfetti(true), 450);
+    return () => clearTimeout(timer);
+  }, [onTrack]);
 
   const handleConfirm = async (amountMinor: number) => {
     if (!selected) return;
@@ -64,73 +98,132 @@ export default function HomeScreen() {
     }
   };
 
+  const tintFor = (tint: (typeof ENTRY_ACTIONS)[number]['tint']) =>
+    tint === 'primary' ? colors.primary : tint === 'accent' ? colors.accent : colors.navySoft;
+
   return (
     <>
       <Screen
         scroll
-        headerLeft={<HkLogo size={36} />}
-        showLanguageToggle
-        headerRight={
-          <View style={styles.headerActions}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('groups.title')}
-              onPress={() => router.push('/groups' as Href)}
-              style={styles.linkBtn}
-            >
-              <Text style={styles.link}>{t('home.groups')}</Text>
-            </Pressable>
-            <SettingsButton
-              accessibilityLabel={t('settings.title')}
-              onPress={() => router.push('/settings')}
-            />
+        headerLeft={
+          <View style={styles.headerLeft}>
+            <HkLogo size={40} />
+            <View style={styles.headerText}>
+              <Text style={styles.greeting} numberOfLines={1}>
+                {t('home.greeting')} 👋
+              </Text>
+              <Text
+                style={[styles.brand, { fontSize: scale(22) }]}
+                accessibilityRole="header"
+                numberOfLines={1}
+              >
+                {t('app.name')}
+              </Text>
+            </View>
           </View>
         }
+        showLanguageToggle
       >
-        <Text
-          style={[styles.brand, { fontSize: scale(typography.brand.fontSize) }]}
-          accessibilityRole="header"
-        >
-          {t('app.name')}
-        </Text>
-        <Text style={styles.greeting}>{t('home.greeting')}</Text>
-
-        <Pressable
-          style={styles.totalCard}
+        <PressableScale
+          style={styles.hero}
+          scaleTo={0.98}
           accessibilityRole="button"
           accessibilityHint={t('home.openDashboard')}
           onPress={() => router.push('/dashboard' as Href)}
         >
-          <Text style={styles.totalLabel}>{t('home.monthTotal')}</Text>
-          <Text
-            style={[styles.totalValue, { fontSize: scale(typography.amount.fontSize) }]}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-          >
-            {formatPkr(monthTotal)}
-          </Text>
-          <Text style={styles.totalHint}>{t('home.openDashboard')}</Text>
-        </Pressable>
+          <View style={[styles.blob, styles.blobTeal]} />
+          <View style={[styles.blob, styles.blobAmber]} />
+
+          <View style={styles.heroRow}>
+            <View style={styles.heroLeft}>
+              <Text style={styles.heroLabel}>{t('home.monthTotal')}</Text>
+              <Text
+                style={[styles.heroValue, { fontSize: scale(typography.amountXL.fontSize) }]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+              >
+                {formatPkr(monthTotal)}
+              </Text>
+              {hasBudget ? (
+                <Text style={styles.heroSub} numberOfLines={1}>
+                  {progress.threshold === 'exceeded'
+                    ? t('home.overBy', {
+                        defaultValue: 'Over by {{amount}}',
+                        amount: formatPkr(progress.spentMinor - progress.limitMinor),
+                      })
+                    : t('home.leftThisMonth', {
+                        defaultValue: '{{amount}} left this month',
+                        amount: formatPkr(progress.remainingMinor),
+                      })}
+                </Text>
+              ) : null}
+            </View>
+
+            <ProgressRing
+              progress={hasBudget ? progress.ratio : 0}
+              size={92}
+              strokeWidth={10}
+              color={ringColor}
+              trackColor={withAlpha(brand.white, 0.14)}
+            >
+              {hasBudget ? (
+                <>
+                  <Text style={styles.ringPercent}>{progress.percent}%</Text>
+                  <Text style={styles.ringCaption}>{t('home.budget')}</Text>
+                </>
+              ) : (
+                <Ionicons name="flag" size={26} color={colors.accent} />
+              )}
+            </ProgressRing>
+          </View>
+
+          <View style={styles.heroChip}>
+            <Text style={styles.heroChipText}>
+              {hasBudget ? t('home.openDashboard') : t('dashboard.set')}
+            </Text>
+            <Ionicons name="arrow-forward" size={14} color={brand.navy} />
+          </View>
+        </PressableScale>
+
+        {onTrack ? (
+          <View style={styles.cheer} accessibilityRole="text">
+            <Text style={styles.cheerEmoji}>🎉</Text>
+            <View style={styles.flex}>
+              <Text style={styles.cheerTitle}>
+                {t('home.onTrackTitle', "You're on track!")}
+              </Text>
+              <Text style={styles.cheerBody}>
+                {t('home.onTrackBody', 'Spending is within your monthly budget. Keep it up!')}
+              </Text>
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.entryActions}>
-          {ENTRY_ACTIONS.map((action) => (
-            <Pressable
-              key={action.route}
-              accessibilityRole="button"
-              accessibilityLabel={t(action.a11yKey)}
-              onPress={() => router.push(action.route as Href)}
-              style={({ pressed }) => [styles.entryAction, pressed ? styles.pressed : null]}
-            >
-              <Text style={styles.entryGlyph}>{action.glyph}</Text>
-              <Text style={styles.entryLabel} numberOfLines={1}>
-                {t(action.labelKey)}
-              </Text>
-            </Pressable>
-          ))}
+          {ENTRY_ACTIONS.map((action) => {
+            const tint = tintFor(action.tint);
+            return (
+              <PressableScale
+                key={action.route}
+                accessibilityRole="button"
+                accessibilityLabel={t(action.a11yKey)}
+                onPress={() => router.push(action.route as Href)}
+                style={styles.entryAction}
+              >
+                <View style={[styles.entryIcon, { backgroundColor: withAlpha(tint, 0.14) }]}>
+                  <Ionicons name={action.icon} size={22} color={tint} />
+                </View>
+                <Text style={styles.entryLabel} numberOfLines={1}>
+                  {t(action.labelKey)}
+                </Text>
+              </PressableScale>
+            );
+          })}
         </View>
 
         {error ? (
           <Pressable onPress={clearError} style={styles.errorBanner}>
+            <Ionicons name="alert-circle" size={18} color={colors.danger} />
             <Text style={styles.errorText}>{error}</Text>
           </Pressable>
         ) : null}
@@ -159,6 +252,8 @@ export default function HomeScreen() {
         <ExpenseList expenses={expenses} />
       </Screen>
 
+      <Confetti run={confetti} onDone={() => setConfetti(false)} />
+
       <Modal
         visible={selected !== null}
         animationType="slide"
@@ -182,102 +277,177 @@ export default function HomeScreen() {
 }
 
 const useStyles = makeStyles((colors) => ({
+  flex: { flex: 1 },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm + 2,
+    flexShrink: 1,
+  },
+  headerText: {
+    flexShrink: 1,
+  },
+  greeting: {
+    ...typography.caption,
+    color: colors.textSecondary,
+  },
   brand: {
     ...typography.brand,
     color: colors.text,
-    marginTop: spacing.sm,
   },
-  greeting: {
-    ...typography.body,
-    color: colors.textSecondary,
+  hero: {
+    backgroundColor: colors.navy,
+    borderRadius: radii.xl,
+    padding: spacing.lg - 4,
     marginBottom: spacing.md,
+    overflow: 'hidden',
+    ...shadows.card,
   },
-  totalCard: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.lg,
+  blob: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  blobTeal: {
+    width: 180,
+    height: 180,
+    right: -60,
+    top: -70,
+    backgroundColor: withAlpha(brand.teal, 0.22),
+  },
+  blobAmber: {
+    width: 120,
+    height: 120,
+    left: -40,
+    bottom: -60,
+    backgroundColor: withAlpha(brand.amber, 0.18),
+  },
+  heroRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  heroLeft: {
+    flex: 1,
+  },
+  heroLabel: {
+    ...typography.overline,
+    color: colors.onNavy,
+    opacity: 0.7,
+  },
+  heroValue: {
+    ...typography.amountXL,
+    color: colors.onNavy,
+    marginTop: spacing.xs,
+  },
+  heroSub: {
+    ...typography.caption,
+    color: colors.onNavy,
+    opacity: 0.8,
+    marginTop: spacing.xs,
+  },
+  ringPercent: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.onNavy,
+  },
+  ringCaption: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.onNavy,
+    opacity: 0.7,
+  },
+  heroChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.md,
+    backgroundColor: brand.amber,
+    paddingHorizontal: spacing.md - 2,
+    paddingVertical: 7,
+    borderRadius: radii.pill,
+  },
+  heroChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: brand.navy,
+  },
+  cheer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm + 4,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radii.card,
     padding: spacing.md,
     marginBottom: spacing.md,
   },
+  cheerEmoji: {
+    fontSize: 28,
+  },
+  cheerTitle: {
+    ...typography.subtitle,
+    color: colors.text,
+  },
+  cheerBody: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
   entryActions: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.sm + 4,
     marginBottom: spacing.lg,
   },
   entryAction: {
     flex: 1,
-    minHeight: 64,
+    minHeight: 88,
     backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderRadius: radii.card,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.xs,
-    gap: spacing.xs,
+    gap: spacing.sm,
+    ...shadows.soft,
   },
-  entryGlyph: {
-    fontSize: 20,
-    color: colors.primary,
+  entryIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   entryLabel: {
     ...typography.caption,
     color: colors.text,
     fontWeight: '700',
   },
-  pressed: {
-    opacity: 0.8,
-  },
-  totalLabel: {
-    ...typography.caption,
-    color: colors.onPrimary,
-    opacity: 0.75,
-    fontWeight: '600',
-  },
-  totalValue: {
-    ...typography.amount,
-    color: colors.onPrimary,
-    marginTop: spacing.xs,
-  },
-  totalHint: {
-    ...typography.caption,
-    color: colors.onPrimary,
-    opacity: 0.75,
-    marginTop: spacing.sm,
-  },
   section: {
     ...typography.subtitle,
+    fontSize: 18,
+    fontWeight: '800',
     color: colors.text,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.sm + 4,
   },
   sectionSpaced: {
     marginTop: spacing.lg,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  linkBtn: {
-    padding: spacing.sm,
-  },
-  link: {
-    color: colors.primary,
-    fontWeight: '700',
   },
   backdrop: {
     flex: 1,
     backgroundColor: colors.overlay,
   },
   errorBanner: {
-    backgroundColor: colors.surfaceMuted,
-    borderWidth: 1,
-    borderColor: colors.danger,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.dangerSoft,
     padding: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: radii.card,
     marginBottom: spacing.md,
   },
   errorText: {
+    ...typography.caption,
     color: colors.danger,
+    flex: 1,
   },
 }));

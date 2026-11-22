@@ -3,9 +3,10 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 
 import { setAppLanguage } from '../../i18n';
+import { shadows } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
 
-const BTN = 30;
+const BTN = 36;
 
 function SunIcon({ color, size = 16 }: { color: string; size?: number }) {
   return (
@@ -126,30 +127,29 @@ export function LanguageToggle() {
 
 const useStyles = makeStyles((colors) => ({
   pressed: {
-    opacity: 0.85,
+    opacity: 0.8,
+    transform: [{ scale: 0.94 }],
   },
   iconBtn: {
     width: BTN,
     height: BTN,
     borderRadius: BTN / 2,
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    ...shadows.soft,
   },
   langBtn: {
     height: BTN,
     minWidth: BTN,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     borderRadius: BTN / 2,
-    borderWidth: 1,
-    borderColor: colors.border,
     backgroundColor: colors.surface,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+    ...shadows.soft,
   },
   langCode: {
     fontSize: 11,

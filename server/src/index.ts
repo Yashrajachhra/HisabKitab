@@ -10,6 +10,7 @@ import { groupsRouter } from './routes/groups';
 import { healthRouter } from './routes/health';
 
 const app = express();
+if (process.env.VERCEL) app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(
@@ -41,7 +42,7 @@ app.get('/', (_req, res) => {
 });
 
 async function boot(): Promise<void> {
-  if (env.nodeEnv === 'test') return;
+  if (env.nodeEnv === 'test' || process.env.VERCEL) return;
   try {
     await connectMongo();
     console.info('MongoDB connected');

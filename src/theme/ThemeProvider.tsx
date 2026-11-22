@@ -9,7 +9,13 @@ import {
 } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
 
-import { palettes, type AppColors, type ColorScheme } from '../config/theme';
+import {
+  fontForWeight,
+  fonts,
+  palettes,
+  type AppColors,
+  type ColorScheme,
+} from '../config/theme';
 import { getSecureItem, setSecureItem } from '../utils/secureStorage';
 
 const THEME_KEY = 'hk_color_scheme';
@@ -59,6 +65,35 @@ export function useTheme(): ThemeContextValue {
 /** Builds a styles hook that re-creates the stylesheet only when the color scheme changes. */
 type StyleDefinitions = Parameters<typeof StyleSheet.create>[0];
 
+const JAKARTA_PREFIX = 'PlusJakartaSans_';
+
+/**
+ * Custom fonts ship one file per weight, and Android ignores `fontWeight` on
+ * custom families. Translate every `fontWeight` into the matching Plus Jakarta
+ * Sans family so all existing styles pick up the brand font automatically.
+ */
+function applyBrandFont<T extends StyleDefinitions>(defs: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [name, raw] of Object.entries(defs)) {
+    const style = raw as Record<string, unknown> | null;
+    if (!style || typeof style !== 'object') {
+      out[name] = raw;
+      continue;
+    }
+    const family = style.fontFamily as string | undefined;
+    const ownsFamily = family === undefined || family.startsWith(JAKARTA_PREFIX);
+    if (ownsFamily && style.fontWeight !== undefined) {
+      const { fontWeight, ...rest } = style;
+      out[name] = { ...rest, fontFamily: fontForWeight(fontWeight as string) };
+    } else if (family === undefined && style.fontSize !== undefined) {
+      out[name] = { ...style, fontFamily: fonts.regular };
+    } else {
+      out[name] = style;
+    }
+  }
+  return out as T;
+}
+
 export function makeStyles<T extends StyleDefinitions>(
   factory: (colors: AppColors) => T & StyleDefinitions,
 ): () => Readonly<T> {
@@ -67,7 +102,7 @@ export function makeStyles<T extends StyleDefinitions>(
     const { scheme, colors } = useTheme();
     let styles = cache[scheme];
     if (!styles) {
-      styles = StyleSheet.create(factory(colors));
+      styles = StyleSheet.create(applyBrandFont(factory(colors)));
       cache[scheme] = styles;
     }
     return styles;

@@ -6,6 +6,7 @@ import { spacing, typography } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
 import { MAX_CONTENT_WIDTH, useResponsive } from '../../hooks/useResponsive';
 import { LanguageToggle, ThemeToggle } from './HeaderToggles';
+import { BOTTOM_NAV_SPACE, useBottomNavVisible } from './BottomNav';
 
 type ScreenProps = {
   children?: ReactNode;
@@ -31,7 +32,9 @@ export function Screen({
   const { colors } = useTheme();
   const styles = useStyles();
   const { gutter, scale } = useResponsive();
+  const navVisible = useBottomNavVisible();
   const frame = { paddingHorizontal: gutter };
+  const navSpace = navVisible ? { paddingBottom: BOTTOM_NAV_SPACE } : null;
 
   const body = loading ? (
     <View style={styles.loading}>
@@ -61,10 +64,12 @@ export function Screen({
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={[styles.content, styles.frame, frame, style]}>{body}</View>
+          <View style={[styles.content, styles.frame, frame, navSpace, style]}>{body}</View>
         </ScrollView>
       ) : (
-        <View style={[styles.content, styles.frame, styles.flex, frame, style]}>{body}</View>
+        <View style={[styles.content, styles.frame, styles.flex, frame, navSpace, style]}>
+          {body}
+        </View>
       )}
     </SafeAreaView>
   );
@@ -82,11 +87,11 @@ const useStyles = makeStyles((colors) => ({
   },
   header: {
     paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   title: {
     ...typography.title,

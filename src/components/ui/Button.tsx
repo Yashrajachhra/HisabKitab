@@ -1,6 +1,6 @@
 import { ActivityIndicator, Pressable, Text, type ViewStyle } from 'react-native';
 
-import { radii, spacing, typography } from '../../config/theme';
+import { radii, shadows, spacing, typography } from '../../config/theme';
 import { makeStyles, useTheme } from '../../theme/ThemeProvider';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -57,30 +57,30 @@ export function Button({
 
 const useStyles = makeStyles((colors) => ({
   base: {
-    minHeight: 48,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
+    minHeight: 52,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   primary: {
     backgroundColor: colors.primary,
+    ...shadows.raised,
   },
   secondary: {
-    backgroundColor: colors.surfaceMuted,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.primaryMuted,
   },
   ghost: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.border,
   },
   danger: {
     backgroundColor: colors.danger,
   },
   pressed: {
-    opacity: 0.88,
+    opacity: 0.92,
+    transform: [{ scale: 0.97 }],
   },
   disabled: {
     opacity: 0.5,

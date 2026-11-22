@@ -26,7 +26,11 @@
     "groups": "گروپس",
     "budget": "بجٹ",
     "monthTotal": "اس مہینے",
-    "openDashboard": "بجٹ اور چارٹ دیکھیں"
+    "openDashboard": "بجٹ اور چارٹ دیکھیں",
+    "leftThisMonth": "اس مہینے {{amount}} باقی",
+    "overBy": "{{amount}} زیادہ خرچ",
+    "onTrackTitle": "شاباش! آپ بجٹ میں ہیں",
+    "onTrackBody": "آپ کا خرچ ماہانہ بجٹ کے اندر ہے۔ یوں ہی جاری رکھیں!"
   },
   "auth": {
     "loginTitle": "سائن ان",
@@ -268,5 +272,12 @@
     "darkMode": "ڈارک موڈ پر جائیں",
     "lightMode": "لائٹ موڈ پر جائیں",
     "switchLanguage": "انگریزی پر جائیں"
+  },
+  "nav": {
+    "home": "ہوم",
+    "groups": "گروپس",
+    "scan": "اسکین",
+    "insights": "جائزہ",
+    "profile": "پروفائل"
   }
 }
